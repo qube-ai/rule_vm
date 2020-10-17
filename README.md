@@ -151,6 +151,17 @@ Possible rules one might want to create:
     - Temperature outside less than 30 degree centigrade
 
 ```json
+
+// Logical AND
+{
+  "operation": "logical_and"
+}
+
+// Logical OR
+{
+  "operation": "logical_or"
+}
+
 // Is it past 6PM? Is it before 4PM?
 {
     "operation": "at_time",

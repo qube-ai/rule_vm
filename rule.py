@@ -23,13 +23,16 @@ class Rule:
         "door_window_state_for": instructions.DoorWindowStateFor,
         "check_occupancy_for": instructions.CheckOccupancyFor,
         "check_occupancy": instructions.CheckOccupancy,
+        "logical_and": instructions.LogicalAnd,
+        "logical_or": instructions.LogicalOr,
     ]
 
 
-    def __init__(self, json_data: str):
+    def __init__(self, rule_name, json_data: str):
         '''Converts JSON data into rule object'''
 
         self.instruction_stream: List = []
+        self.name = rule_name
 
         # Parse JSON data
         try:
@@ -51,3 +54,16 @@ class Rule:
             raise RuleParsingException("Unable to decode JSON")
         
         return self
+    
+    def infix_to_postfix(self):
+        # TODO Perform infix to postfix conversion to make it easier for the VM to evaluate the rule
+        pass
+
+
+
+if __name__ == "__main__":
+    json_data = {
+        "operation": "at_time",
+        "time": ""
+    }
+    pass
