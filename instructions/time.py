@@ -1,5 +1,7 @@
-class AtTime:
+from .base import BaseInstruction
+
+class AtTime(BaseInstruction):
     pass
 
-class AtTimeWithOccurence:
+class AtTimeWithOccurence(BaseInstruction):
     pass

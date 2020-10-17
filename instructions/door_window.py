@@ -1,5 +1,7 @@
-class DoorWindowState:
+from .base import BaseInstruction
+
+class DoorWindowState(BaseInstruction):
     pass
 
-class DoorWindowStateFor:
+class DoorWindowStateFor(BaseInstruction):
     pass

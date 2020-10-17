@@ -1,5 +1,7 @@
-class CheckTemperature:
+from .base import BaseInstruction
+
+class CheckTemperature(BaseInstruction):
     pass
 
-class CheckTemperatureFor:
+class CheckTemperatureFor(BaseInstruction):
     pass

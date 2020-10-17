@@ -1,5 +1,7 @@
-class CheckOccupancyFor:
+from .base import BaseInstruction
+
+class CheckOccupancyFor(BaseInstruction):
     pass
 
-class CheckOccupancy:
+class CheckOccupancy(BaseInstruction):
     pass

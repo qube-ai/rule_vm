@@ -1,5 +1,7 @@
-class IsRelayState:
+from .base import BaseInstruction
+
+class IsRelayState(BaseInstruction):
     pass
 
-class IsRelayStateFor:
+class IsRelayStateFor(BaseInstruction):
     pass
