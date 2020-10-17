@@ -157,6 +157,13 @@ Possible rules one might want to create:
     "time": "<ISO datetime with timezone>"
 }
 
+// Turn off the balcony lights at 6PM everyday for 10 times.
+{
+  "operation": "at_time_for_x_occurence",
+  "time": "<ISO datetime with timezone>",
+  "occurence": 10
+}
+
 /* Podnet Switch */
 // Is relay0 of podnet-switch-1, on? Is relay3 of podnet-switch-6, off?
 {
@@ -230,14 +237,6 @@ Possible rules one might want to create:
 
 ```
 
+## Construct
 
-## Flow
-These are the sections through which we have to think through.
-```
-(Information to encode, generic conditions)
-(Data structure for generic condition)
-(Data serialization)
-(Data deserialization)
-(Rule object)
-(Rule Evaluation)
-```
+**Rule** contains a list of **conditions**. Each condition must be evaluated before a rule can be evaluated.
