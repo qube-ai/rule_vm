@@ -89,15 +89,18 @@ class AtTimeWithOccurence(AtTime):
         self.validate_schema(json_data)
 
         self.time_string = parsed_data["time"]
-        docuemnt = get_document("collection", "document")
-        self.occurence = docuemnt["occurence"]
+        self.occurence = 0s
     
     async def evaluate(self):
+        
+        docuemnt = await get_document("collection", "document")
+        self.occurence = docuemnt["occurence"]
+
         if occurence > 0:
             occurence -= 1
             return await super().evaluate()
-        else:
-            return False
+
+        return False
 
     
     def __eq__(self, other):
