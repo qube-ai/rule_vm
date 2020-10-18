@@ -27,15 +27,20 @@ class AtTime(BaseInstruction):
     }
     
     def __init__(self, json_data:str):
+        self.parsed_data = None
+
+        self.validate_schema(json_data)
+
+        self.time_string = parsed_data["time"]
+    
+    def validate_schema(self, json_data):
         # This statement will allow error to propagate upwards
         # if an incorrect json_data string is passed.
-        parsed_data = json.loads(json_data)
+        self.parsed_data = json.loads(json_data)
 
         # This will raise ValidationError or SchemaError,
         # both of which we'll allow to propagate upwards
-        jsonschema.validate(parsed_data, self.schema, format_checker=jsonschema.FormatChecker())
-
-        self.time_string = parsed_data["time"]
+        jsonschema.validate(self.parsed_data, self.schema, format_checker=jsonschema.FormatChecker())
     
 
     async def evaluate(self):
@@ -54,7 +59,7 @@ class AtTime(BaseInstruction):
             delta = self.target_time - current_time
         
         # Sleep for that interval of time
-        trio.sleep(delta.seconds)
+        await trio.sleep(delta.seconds)
         
         # Once this task wakes up, simply return True as waiting is over.
         return True
@@ -63,5 +68,38 @@ class AtTime(BaseInstruction):
         return self.instruction_type == other
 
 
-class AtTimeWithOccurence(BaseInstruction):
-    pass
+class AtTimeWithOccurence(AtTime):
+    
+    instruction_type = InstructionConstant.AT_TIME_WITH_OCCURENCE 
+
+    schema = {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "properties": {
+            "operation": {"type": "string"},
+            "time": {"type": "string", "format": "time"},
+            "occurence": {"type": "integer", "exclusiveMinimum": 0}
+        },
+        "required": ["operation", "time"]
+    }
+
+    def __init__(self, json_data:str):
+        self.parsed_data = None
+
+        self.validate_schema(json_data)
+
+        self.time_string = parsed_data["time"]
+        docuemnt = get_document("collection", "document")
+        self.occurence = docuemnt["occurence"]
+    
+    async def evaluate(self):
+        if occurence > 0:
+            occurence -= 1
+            return await super().evaluate()
+        else:
+            return False
+
+    
+    def __eq__(self, other):
+        return self.instruction_type == other
+    
