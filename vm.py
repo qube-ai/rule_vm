@@ -161,7 +161,6 @@ class VM:
         parsed_json = []
 
         for line in rule_lines:
-
             clean_line = line.strip().lower()
 
             if clean_line.startswith("and"):
@@ -175,12 +174,53 @@ class VM:
                     match = pattern.parse(clean_line)
                     if match:
                         # If match is found, move to the next line
+                        operation = clean_line.split(" ")[0]
+                        json_instruction = {**match.named}
 
                         # Check for each instruction
-                        if clean_line.startswith("at_time"):
-                            parsed_json.append({"operation": "at_time", **match.named})
+                        if operation == "at_time":
+                            json_instruction["operation"] = "at_time"
 
-                        break
+                        elif operation == "at_time_with_occurrence":
+                            json_instruction["operation"] = "at_time_with_occurrence"
+
+                        elif operation == "energy_meter":
+                            json_instruction["operation"] = "energy_meter"
+
+                        elif operation == "dw_state":
+                            json_instruction["operation"] = "dw_state"
+
+                        elif operation == "dw_state_for":
+                            json_instruction["operation"] = "dw_state_for"
+
+                        elif operation == "occupancy_state":
+                            json_instruction["operation"] = "occupancy_state"
+
+                        elif operation == "occupancy_state_for":
+                            json_instruction["operation"] = "occupancy_state_for"
+
+                        elif operation == "relay_state":
+                            json_instruction["operation"] = "relay_state"
+
+                        elif operation == "relay_state_for":
+                            json_instruction["operation"] = "relay_state_for"
+
+                        elif operation == "temperature":
+                            json_instruction["operation"] = "temperature"
+
+                        elif operation == "temperature_for":
+                            json_instruction["operation"] = "temperature_for"
+
+                        elif operation == "energy_meter":
+                            json_instruction["operation"] = "energy_meter"
+
+                        else:
+                            # This will probably never get executed
+                            # The reason is, we'll never have a match with a string that
+                            # we don't recognize
+                            print(f"Unknown operation: {operation}")
+
+                        parsed_json.append(json_instruction)
 
                     else:
                         # If match isn't found, move to the next pattern
