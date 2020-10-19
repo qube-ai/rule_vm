@@ -1,6 +1,7 @@
 import logging
 import queue
 import threading
+import instructions
 
 import trio
 
@@ -33,10 +34,93 @@ class VM:
 
             await trio.sleep(0)
 
-    async def __executor(self, task):
-        logging.info(f"__executor: Started executing: {task}")
-        await trio.sleep(10)
-        logging.info(f"__executor: Task {task} complete!")
+    async def __executor(self, rule):
+        """Evaluates a rule using a stack."""
+
+        # Stack used for evaluating a rule
+        stack = []
+
+        # Evaluate each expression
+        for instruction in rule.instruction_stream:
+
+            if instructions.InstructionConstant.LOGICAL_AND == instruction:
+                # Pop values from stack
+                op1 = stack.pop()
+                op2 = stack.pop()
+
+                # Evaluate op1
+                op1_value = None
+                if isinstance(op1, instructions.BaseInstruction):
+                    # If it's an instruction, evaluate it
+                    op1_value = await op1.evaluate()
+                else:
+                    # It's probably only a bool value
+                    op1_value = op1
+
+                # Evaluate op2
+                op2_value = None
+                if isinstance(op2, instructions.BaseInstruction):
+                    # If it's an instruction evaluate it
+                    op2_value = await op2.evaluate()
+                else:
+                    # It's probably only a bool value
+                    op2_value = op2
+
+                # Perform logical AND and push it to stack
+                stack.append(op1_value and op2_value)
+
+            elif instructions.InstructionConstant.LOGICAL_OR == instruction:
+                # Pop values from stack
+                op1 = stack.pop()
+                op2 = stack.pop()
+
+                # Evaluate op1
+                op1_value = None
+                if isinstance(op1, instructions.BaseInstruction):
+                    # If it's an instruction, evaluate it
+                    op1_value = await op1.evaluate()
+                else:
+                    # It's probably only a bool value
+                    op1_value = op1
+
+                # Evaluate op2
+                op2_value = None
+                if isinstance(op2, instructions.BaseInstruction):
+                    # If it's an instruction evaluate it
+                    op2_value = await op2.evaluate()
+                else:
+                    # It's probably only a bool value
+                    op2_value = op2
+
+                # Perform logical AND and push it to stack
+                stack.append(op1_value or op2_value)
+
+            elif instructions.InstructionConstant.AT_TIME == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.AT_TIME_WITH_OCCURENCE == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.IS_RELAY_STATE == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.IS_RELAY_STATE_FOR == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.CHECK_TEMPERATURE == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.CHECK_TEMPERATURE_FOR == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.CHECK_OCCUPANCY == instruction:
+                stack.append(instruction)
+
+            elif instructions.InstructionConstant.CHECK_OCCUPANCY_FOR == instruction:
+                stack.append(instruction)
+
+        # The last value would always be a bool, True or False
+        return stack.pop()
 
     def execute_rule(self, rule):
         self.task_queue.put(rule)
