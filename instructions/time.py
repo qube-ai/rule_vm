@@ -1,9 +1,10 @@
+import arrow
+import trio
+
+import store
 from .base import BaseInstruction
 from .base import InstructionConstant
-import jsonschema
-import json
-import trio
-import arrow
+
 
 # TODO need to create a Rule Statistics to prevent the execution of same rule multiple times.
 #  This can happen in the case of time based instructions.
@@ -11,8 +12,8 @@ import arrow
 #  and then all of them will return True, which shouldn't happen.
 # Think of a mechanism to prevent this from happening.
 
-class AtTime(BaseInstruction):
 
+class AtTime(BaseInstruction):
     instruction_type = InstructionConstant.AT_TIME
 
     # TODO `time` format accepts values without timezone. Fix this by making a custom validator.
@@ -25,23 +26,12 @@ class AtTime(BaseInstruction):
         },
         "required": ["operation", "time"]
     }
-    
-    def __init__(self, json_data:str):
-        self.parsed_data = None
 
-        self.validate_schema(json_data)
+    def __init__(self, json_data: str):
+        super(AtTime, self).__init__(json_data)
 
-        self.time_string = parsed_data["time"]
-    
-    def validate_schema(self, json_data):
-        # This statement will allow error to propagate upwards
-        # if an incorrect json_data string is passed.
-        self.parsed_data = json.loads(json_data)
-
-        # This will raise ValidationError or SchemaError,
-        # both of which we'll allow to propagate upwards
-        jsonschema.validate(self.parsed_data, self.schema, format_checker=jsonschema.FormatChecker())
-    
+        self.time_string = self.parsed_data["time"]
+        self.target_time = None
 
     async def evaluate(self):
         # Find the difference between target time and current time in UTC
@@ -50,17 +40,18 @@ class AtTime(BaseInstruction):
         # Expected time, 09:42:32+05:30
         temp = arrow.get(self.time_string, "HH:mm:ssZZ")
         current_time = arrow.now(temp.tzinfo)
-        self.target_time = temp.shift(years=current_time.year-1, months=current_time.month-1, days=current_time.day-1)
+        self.target_time = temp.shift(years=current_time.year - 1, months=current_time.month - 1,
+                                      days=current_time.day - 1)
 
         delta = 0
         if current_time > self.target_time:
             delta = current_time - self.target_time
         else:
             delta = self.target_time - current_time
-        
+
         # Sleep for that interval of time
         await trio.sleep(delta.seconds)
-        
+
         # Once this task wakes up, simply return True as waiting is over.
         return True
 
@@ -68,9 +59,8 @@ class AtTime(BaseInstruction):
         return self.instruction_type == other
 
 
-class AtTimeWithOccurence(AtTime):
-    
-    instruction_type = InstructionConstant.AT_TIME_WITH_OCCURENCE 
+class AtTimeWithOccurrence(AtTime):
+    instruction_type = InstructionConstant.AT_TIME_WITH_OCCURENCE
 
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
@@ -83,26 +73,27 @@ class AtTimeWithOccurence(AtTime):
         "required": ["operation", "time"]
     }
 
-    def __init__(self, json_data:str):
+    def __init__(self, json_data: str):
+        super(AtTimeWithOccurrence, self).__init__(json_data)
+
         self.parsed_data = None
 
-        self.validate_schema(json_data)
+        self.time_string: str = self.parsed_data["time"]
+        self.occurrence: int = 0
 
-        self.time_string = parsed_data["time"]
-        self.occurence = 0s
-    
     async def evaluate(self):
-        
-        docuemnt = await get_document("collection", "document")
-        self.occurence = docuemnt["occurence"]
+        document = await store.get_document("collection", "document")
+        self.occurrence = document["occurrence"]
 
-        if occurence > 0:
-            occurence -= 1
+        if self.occurrence > 0:
+            # Decrement the occurrence and update the DB
+            self.occurrence -= 1
+            # store.update_document()
+            # TODO Update the DB with the updated value
+
             return await super().evaluate()
 
         return False
 
-    
     def __eq__(self, other):
         return self.instruction_type == other
-    
