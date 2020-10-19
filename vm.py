@@ -2,6 +2,7 @@ import logging
 import queue
 import threading
 import instructions
+import json
 
 import trio
 import rule
@@ -155,7 +156,7 @@ class VM:
         self.vm_thread.join()
 
     @staticmethod
-    def parse_from_string(rule_script: str):
+    def parse_from_string(rule_script: str) -> rule.Rule:
         rule_lines = rule_script.split("\n")
 
         parsed_json = []
@@ -226,10 +227,16 @@ class VM:
                         # If match isn't found, move to the next pattern
                         continue
 
-        return parsed_json
-
-        # TODO parse the JSON to create a rule
+        return VM.parse_from_dict(parsed_json)
 
     @staticmethod
     def parse_from_json(json_data: str) -> rule.Rule:
-        return rule.Rule(json_data)
+        try:
+            parsed_json = json.loads(json_data)
+            return VM.parse_from_dict(parsed_json)
+        except json.JSONDecodeError:
+            print("Unable to decode JSON")
+
+    @staticmethod
+    def parse_from_dict(rule_dict) -> rule.Rule:
+        return rule.Rule(rule_dict)
