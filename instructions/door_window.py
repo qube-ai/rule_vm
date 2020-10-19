@@ -1,7 +1,12 @@
 from .base import BaseInstruction
+from .base import InstructionConstant
+
 
 class DoorWindowState(BaseInstruction):
-    pass
+    instruction_type = InstructionConstant.DOOR_WINDOW_STATE
+    name = "DW_STATE"
+
 
 class DoorWindowStateFor(BaseInstruction):
-    pass
+    instruction_type = InstructionConstant.DOOR_WINDOW_STATE_FOR
+    name = "DW_STATE_FOR"

@@ -44,7 +44,7 @@ class Rule:
         for ins_data in rule_dict:
             if ins_data["operation"] in Rule.instruction_lut:
                 Instruction = Rule.instruction_lut[ins_data["operation"]]
-                self.instruction_stream.append(Instruction)
+                self.instruction_stream.append(Instruction(ins_data))
 
             else:
                 raise InvalidInstructionException(f"Unknown instruction: {ins_data['operation']}")
@@ -75,3 +75,6 @@ class Rule:
             temp_ins.append(ins)
 
         self.instruction_stream = temp_ins
+
+    def __str__(self):
+        return f"<Rule: {len(self.instruction_stream)} Instructions>"

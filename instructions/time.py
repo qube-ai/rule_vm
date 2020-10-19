@@ -1,5 +1,6 @@
 import arrow
 import trio
+from typing import Dict
 
 import store
 from .base import BaseInstruction
@@ -15,6 +16,7 @@ from .base import InstructionConstant
 
 class AtTime(BaseInstruction):
     instruction_type = InstructionConstant.AT_TIME
+    name = "AT_TIME"
 
     # TODO `time` format accepts values without timezone. Fix this by making a custom validator.
     schema = {
@@ -27,10 +29,9 @@ class AtTime(BaseInstruction):
         "required": ["operation", "time"]
     }
 
-    def __init__(self, json_data: str):
-        super(AtTime, self).__init__(json_data)
-
-        self.time_string = self.parsed_data["time"]
+    def __init__(self, json_data: Dict):
+        self.json_data = json_data
+        self.time_string = self.json_data["time"]
         self.target_time = None
 
     async def evaluate(self):
@@ -61,7 +62,7 @@ class AtTime(BaseInstruction):
 
 class AtTimeWithOccurrence(AtTime):
     instruction_type = InstructionConstant.AT_TIME_WITH_OCCURENCE
-
+    name = "AT_TIME_WITH_OCCURRENCE"
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
@@ -73,13 +74,9 @@ class AtTimeWithOccurrence(AtTime):
         "required": ["operation", "time"]
     }
 
-    def __init__(self, json_data: str):
+    def __init__(self, json_data: Dict):
         super(AtTimeWithOccurrence, self).__init__(json_data)
-
-        self.parsed_data = None
-
-        self.time_string: str = self.parsed_data["time"]
-        self.occurrence: int = 0
+        self.occurrence: int = self.json_data["occurrence"]
 
     async def evaluate(self):
         document = await store.get_document("collection", "document")

@@ -1,3 +1,9 @@
+import json
+from enum import Enum
+
+import jsonschema
+
+
 class InstructionConstant(Enum):
     # Operators
     LOGICAL_AND = 1
@@ -14,7 +20,30 @@ class InstructionConstant(Enum):
     DOOR_WINDOW_STATE_FOR = 10
     CHECK_OCCUPANCY_FOR = 11
     CHECK_OCCUPANCY = 12
+    ENERGY_METER = 13
 
 
 class BaseInstruction:
+
+    name = 'BASE_INSTRUCTION'
+
+    def validate_schema(self, json_data):
+        # This statement will allow error to propagate upwards
+        # if an incorrect json_data string is passed.
+        parsed_data = json.loads(json_data)
+
+        # This will raise ValidationError or SchemaError,
+        # both of which we'll allow to propagate upwards
+        jsonschema.validate(self.parsed_data, self.schema, format_checker=jsonschema.FormatChecker())
+
+        return parsed_data
+
+    def __str__(self):
+        return f"<Instruction '{self.name}'>"
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class InstructionException(Exception):
     pass
