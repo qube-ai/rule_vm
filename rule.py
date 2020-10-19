@@ -2,6 +2,7 @@ from typing import Dict
 from typing import List
 
 import instructions
+from instructions import InstructionConstant
 
 
 class RuleParsingException(Exception):
@@ -33,7 +34,7 @@ class Rule:
     }
 
     def __init__(self, rule_dict: Dict):
-        """Converts JSON data into rule object"""
+        """Converts list of dictionaries into rule object"""
 
         self.instruction_stream: List = []
 
@@ -48,6 +49,29 @@ class Rule:
             else:
                 raise InvalidInstructionException(f"Unknown instruction: {ins_data['operation']}")
 
+        self.infix_to_postfix()
+
     def infix_to_postfix(self):
-        # TODO Perform infix to postfix conversion to make it easier for the VM to evaluate the rule
-        pass
+        # Perform infix to postfix conversion to make it easier for the VM to evaluate the rule
+        stack = []
+        temp_ins = []
+
+        for ins in self.instruction_stream:
+
+            # If it's an operator, do this
+            if (ins.instruction_type == InstructionConstant.LOGICAL_AND) or (ins.instruction_type == InstructionConstant.LOGICAL_OR):
+                if len(stack) == 0:
+                    stack.append(ins)
+                else:
+                    temp_ins.append(stack.pop())
+                    stack.append(ins)
+
+            # If it's an operand, simply throw it into temp_ins
+            else:
+                temp_ins.append(ins)
+
+        # Put the remaining items from stack
+        for ins in stack:
+            temp_ins.append(ins)
+
+        self.instruction_stream = temp_ins
