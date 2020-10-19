@@ -69,6 +69,40 @@ When the conditional expression is generated on the react side, it will be in in
 
 ## JSON representation
 
+### Logical Operation
+Logical AND
+```json
+{
+  "operation": "logical_and"
+}
+```
+
+Logical OR
+```json
+{
+  "operation": "logical_or"
+}
+```
+
+### Time
+
+Is it past 6PM? Is it before 4PM?
+```json
+{
+    "operation": "at_time",
+    "time": "<ISO datetime with timezone>"
+}
+```
+
+Turn off the balcony lights at 6PM everyday for 10 times.
+```json
+{
+  "operation": "at_time_with_occurrence",
+  "time": "<ISO datetime with timezone>",
+  "occurrence": 10
+}
+```
+
 ### Energy Meter
 Generic condition: `<Energy Meter, Device ID, Variable, Comparison OP, Value>`
 
@@ -76,7 +110,7 @@ JSON representation
 ```json
 {
     "type":"energy_meter",
-    "device_id": "podnet-switch-1",
+    "device_id": "meter-1",
     "variable": "voltage",
     "comparison_op": "=",
     "value": 21
@@ -87,13 +121,22 @@ JSON representation
 
 Generic condition: `<Door Window, Device ID, State, For how long(min)>`
 
-JSON representation:
+Is dw1 open?
 ```json
 {
-    "type": "door_window",
+    "operation": "door_window_state",
+    "device_id": "dw-1",
+    "state": "open"
+}
+```
+
+Is dw1 open for more than 10 minutes? 
+```json
+{
+    "operation": "door_window_state_for",
     "device_id": "dw-1",
     "state": "open",
-    "for": 21
+    "for": 20
 }
 ```
 
@@ -103,37 +146,71 @@ Generic condition: `<Occupancy, Device ID, State, For how long(min)>`
 JSON representation:
 ```json
 {
-    "type": "occupancy",
+    "operation": "check_occupancy_for",
     "device_id": "occupancy-1",
     "state": "occupied",
-    "for": 50
+    "time_comparison_operator": "more than",
+    "for": 5
+}
+```
+
+Is the room occupied?
+```json
+{
+    "operation": "check_occupancy",
+    "device_id": "occupancy-1",
+    "state": "occupied"
 }
 ```
 
 ### Temperature Sensor
 Generic condition: `<Temperature, Device ID, Comparison OP, Value>`
 
-JSON representation
+
+If temperature is more than 31 degree Celsius.
 ```json 
 {
-    "type": "temperature",
+    "operation": "check_temperature",
     "device_id": "podnet-switch-1",
-    "comparision_op": ">",
-    "value": 30
+    "temp_comparison_op": "more than",
+    "value": 31
+}
+```
+
+If the temperature is 30 degree for more than 15 minutes, turn on the heater.
+```json
+{
+    "operation": "check_temperature_for",
+    "device_id": "podnet-switch-1",
+    "value": 30,
+    "temp_comparison_op": "equal",
+    "time_comparison_op": "more than",
+    "for": 15
 }
 ```
 
 ### Relay State
 Generic condition: `<Relay, Device ID, Appliance, State, For how long(min)>`
 
-JSON representation
+Is relay0 of podnet-switch-1, on? Is relay3 of podnet-switch-6, off?
 ```json
 {
-    "type": "relay_state",
+    "operation": "is_relay_state",
+    "device_id": "podnet-switch-1",
+    "relay_index": 0,
+    "state": 1
+}
+```
+
+If relay0 of podnet-switch-1 on for more than/less than 10 minutes?
+```json
+{
+    "operation": "is_relay_state_for",
     "device_id": "podnet-switch-1",
     "relay_index": 0,
     "state": 1,
-    "for": 20
+    "time_comparison_operator": "more than",
+    "for": 10
 }
 ```
 
@@ -150,104 +227,123 @@ Possible rules one might want to create:
   - Sentence: `If the temperature outside is below 30 degree centigrade, turn off the AC`. Conditions:
     - Temperature outside less than 30 degree centigrade
 
-```json
+## Instruction Set
 
-// Logical AND
-{
-  "operation": "logical_and"
-}
-
-// Logical OR
-{
-  "operation": "logical_or"
-}
-
-// Is it past 6PM? Is it before 4PM?
-{
-    "operation": "at_time",
-    "time": "<ISO datetime with timezone>"
-}
-
-// Turn off the balcony lights at 6PM everyday for 10 times.
-{
-  "operation": "at_time_for_x_occurence",
-  "time": "<ISO datetime with timezone>",
-  "occurence": 10
-}
-
-/* Podnet Switch */
-// Is relay0 of podnet-switch-1, on? Is relay3 of podnet-switch-6, off?
-{
-    "operation": "is_relay_state",
-    "device_id": "podnet-switch-1",
-    "relay_index": 0,
-    "state": 1
-}
-
-// If relay0 of podnet-switch-1 on for more than/less than 10 minutes?
-{
-    "operation": "is_relay_state_for",
-    "device_id": "podnet-switch-1",
-    "relay_index": 0,
-    "state": 1,
-    "time_comparison_operator": "more than",
-    "for": 10
-}
-
-/* Temperature Sensor */
-// If temperature is more than 31 degree celcius.
-{
-    "operation": "check_temperature",
-    "device_id": "podnet-switch-1",
-    "temp_comparison_op": "more than",
-    "value": 31
-}
-
-// If the temperature is 30 degree for more than 15 minutes, turn on the heater.
-{
-    "operation": "check_temperature_for",
-    "device_id": "podnet-switch-1",
-    "value": 30,
-    "temp_comparison_op": "equal",
-    "time_comparison_op": "more than",
-    "for": 15
-}
-
-/* Door Window Sensor */
-// Is dw1 open?
-{
-    "operation": "door_window_state",
-    "device_id": "dw-1",
-    "state": "open"
-}
-
-// Is dw1 open for more than 10 minutes?
-{
-    "operation": "door_window_state_for",
-    "device_id": "dw-1",
-    "state": "open",
-    "for": 20
-}
-
-/* Occupancy Sensor */
-// Is the room occupied for more than 5 minutes?
-{
-    "operation": "check_occupancy_for",
-    "device_id": "occupancy-1",
-    "state": "occupied",
-    "time_comparison_operator": "more than",
-    "for": 5
-}
-
-// Is the room occupied?
-{
-    "operation": "check_occupancy",
-    "device_id": "occupancy-1",
-    "state": "occupied"
-}
+### At time
 
 ```
+AT_TIME <time in RFC3339 format> 
 
-## Construct
+AT_TIME 18:00:00+05:30
+```
 
-**Rule** contains a list of **conditions**. Each condition must be evaluated before a rule can be evaluated.
+### At time with Occurrence
+This will become true only when we are past the given time and for the given number of occurences.
+```
+AT_TIME_WITH_OCCURRENCE <time in RFC3339 format> <no. of times, occurrence>
+
+AT_TIME_WITH_OCCURRENCE 18:00:00+05:30 10
+```
+
+### AND
+Perform logical AND between the given operands
+
+```
+AND
+```
+
+### OR
+Perform logical OR between the given operands
+
+```
+OR
+```
+
+### Door Window State
+Checks if the door window state is of the given state
+
+```
+DW_STATE <device_id> <state: [OPEN | CLOSE]>
+
+DW_STATE dw-1 OPEN
+```
+
+
+### Door Window state for
+Checks if the door window state is open/close for given amount of time.
+
+```
+DW_STATE_FOR <device_id> <state: [OPEN | CLOSE]> <time in minutes>
+
+DW_STATE_FOR dw-1 OPEN 20
+```
+This is will check whether dw-1 has been open for more than or equal to 20 minutes.
+
+
+###  Occupancy Sensing
+```
+OCCUPANCY_STATE <device_id> <state: [OCCUPIED | UNOCCUPIED]>
+
+OCCUPANCY_STATE os-1 OCCUPIED
+```
+
+### Occupancy Sensing for defined time
+
+```
+OCCUPANCY_STATE_FOR <device_id> <state: [OCCUPIED | UNOCCUPIED] <time in miunutes>
+
+OCCUPANCY_STATE_FOR os-1 OCCUPIED 20
+```
+Checks if the room has been occupied for more than or equal to 20 minutes.
+
+
+### Relay State
+
+```
+RELAY_STATE <device_id> <relay_index> <state:[on | off]
+
+RELAY_STATE ps-1 0 on
+```
+Checks if relay index 0 of ps-1 is switched on.
+
+### Relay state for defined time
+
+```
+RELAY_STATE_FOR <device_id> <relay_index> <state:[on | off]> <time in minutes>
+
+RELAY_STATE_FOR ps-1 0 on 15
+```
+Checks if the state of relay index 0 of device ps-1 is switched on for more than or equal to 15 minutes.
+
+### Temperature
+
+```
+TEMPERATURE <device_id> <comparison_op> <value>
+
+TEMPERATURE ps-1 > 30
+```
+If the temperature of the given device is more than, less than, equal to the given temperature, return true.
+
+
+### Temperature for defined time
+```
+TEMPERATURE_FOR <device_id> <comparison_op> <value> <time in minutes>
+
+TEMPERATURE_FOR ps-1 > 30 15
+```
+If the temperature of ps-1 is more than 30 for more than or equal to 15 minutes.
+
+### Energy Meter
+```
+ENERGY_METER <device_id> <variable> <comparison_op> <value>
+
+ENERGY_METER <device_id> voltage <comparison_op> <value>
+ENERGY_METER <device_id> current <comparison_op> <value>
+ENERGY_METER <device_id> real_power <comparison_op> <value>
+ENERGY_METER <device_id> apparent_power <comparison_op> <value>
+ENERGY_METER <device_id> power_factor <comparison_op> <value: [0.0 to 1.0]>
+ENERGY_METER <device_id> frequency <comparison_op> <value>
+
+ENERGY_METER meter-1 power > 120
+```
+If energy meter meter-1 power is more than 120, return true.
