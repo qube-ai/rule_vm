@@ -90,7 +90,14 @@ Is it past 6PM? Is it before 4PM?
 ```json
 {
     "operation": "at_time",
-    "time": "<ISO datetime with timezone>"
+    "time": "<time in RFC3339 format>"
+}
+```
+Example:
+```json
+{
+    "operation": "at_time",
+    "time": "18:00:00+05:30"
 }
 ```
 
@@ -98,7 +105,7 @@ Turn off the balcony lights at 6PM everyday for 10 times.
 ```json
 {
   "operation": "at_time_with_occurrence",
-  "time": "<ISO datetime with timezone>",
+  "time": "<time in RFC3339 format>",
   "occurrence": 10
 }
 ```
@@ -149,7 +156,6 @@ JSON representation:
     "operation": "check_occupancy_for",
     "device_id": "occupancy-1",
     "state": "occupied",
-    "time_comparison_operator": "more than",
     "for": 5
 }
 ```
@@ -172,7 +178,7 @@ If temperature is more than 31 degree Celsius.
 {
     "operation": "check_temperature",
     "device_id": "podnet-switch-1",
-    "temp_comparison_op": "more than",
+    "comparison_op": "more than",
     "value": 31
 }
 ```
@@ -182,9 +188,8 @@ If the temperature is 30 degree for more than 15 minutes, turn on the heater.
 {
     "operation": "check_temperature_for",
     "device_id": "podnet-switch-1",
+    "comparison_op": "equal",
     "value": 30,
-    "temp_comparison_op": "equal",
-    "time_comparison_op": "more than",
     "for": 15
 }
 ```
@@ -209,7 +214,6 @@ If relay0 of podnet-switch-1 on for more than/less than 10 minutes?
     "device_id": "podnet-switch-1",
     "relay_index": 0,
     "state": 1,
-    "time_comparison_operator": "more than",
     "for": 10
 }
 ```
