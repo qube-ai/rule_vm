@@ -1,4 +1,5 @@
 from vm import VM
+import time
 
 rule_string = '''
 AT_TIME 10:50:30+05:30
@@ -12,5 +13,8 @@ print(rule_obj.instruction_stream)
 test_vm = VM()
 test_vm.execute_rule(rule_obj)
 
-# This does not allow the VM to execute the rules
-# test_vm.stop()
+# Let the tasks load in the VM
+time.sleep(4)
+
+# Perform a waited join, wait for all tasks to finish
+test_vm.waited_stop()

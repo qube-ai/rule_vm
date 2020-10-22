@@ -2,6 +2,7 @@ import queue
 import threading
 import instructions
 import json
+import time
 
 import trio
 import rule
@@ -11,7 +12,7 @@ from loguru import logger
 
 class VM:
     TASK_QUEUE_BUFFER_SIZE = 10
-
+    TASKS_RUNNING = 0
     # Used for parsing rules in string format
     instructions_pattern = [
         pc("AT_TIME {time}"),
@@ -53,6 +54,7 @@ class VM:
                 task = self.task_queue.get_nowait()
                 nursery.start_soon(self.__executor, task)
                 logger.info(f"Spawned a new task inside the VM: {task}")
+                self.TASKS_RUNNING += 1
 
             await trio.sleep(0)
 
@@ -140,11 +142,13 @@ class VM:
             logger.info("Last item in stack is an unevaluated instruction.")
             ret = await last_item.evaluate()
             logger.debug(f"Evaluation of {rule} returned {ret}")
+            self.TASKS_RUNNING -= 1
             return ret
 
         # It's just a boolean value, return it directly
         else:
             logger.debug(f"Evaluation of {rule} returned {last_item}")
+            self.TASKS_RUNNING -= 1
             return last_item
 
     def execute_rule(self, rule):
@@ -155,6 +159,16 @@ class VM:
         logger.info("Shutting down VM thread. Awaiting join.")
         self.run_vm_thread = False
         self.vm_thread.join()
+
+    def waited_stop(self):
+        # Stops for all currently executing tasks to finish and then shuts down the VM
+        while True:
+            if self.TASKS_RUNNING == 0:
+                self.stop()
+                break
+            else:
+                logger.info(f"Waiting for {self.TASKS_RUNNING} to finish.")
+            time.sleep(1)
 
     @staticmethod
     def parse_from_string(rule_script: str) -> rule.Rule:
