@@ -11,6 +11,9 @@ class LogicalAnd(BaseInstruction):
         # We don't use ins_data for this instruction
         pass
 
+    def __eq__(self, other):
+        return self.instruction_type == other
+
 
 class LogicalOr(BaseInstruction):
     instruction_type = InstructionConstant.LOGICAL_OR
@@ -19,3 +22,6 @@ class LogicalOr(BaseInstruction):
     def __init__(self, ins_data: Dict):
         # We don't use ins_data for this instruction
         pass
+
+    def __eq__(self, other):
+        return self.instruction_type == other
