@@ -1,10 +1,11 @@
-import arrow
-import trio
 from typing import Dict
+
+import arrow
 
 import store
 from .base import BaseInstruction
 from .base import InstructionConstant
+from loguru import logger
 
 
 # TODO need to create a Rule Statistics to prevent the execution of same rule multiple times.
@@ -44,17 +45,23 @@ class AtTime(BaseInstruction):
         self.target_time = temp.shift(years=current_time.year - 1, months=current_time.month - 1,
                                       days=current_time.day - 1)
 
-        delta = 0
+        # delta = 0
+        logger.debug(f"Evaluating {self.instruction_type}. Current time({current_time}) and Target time({self.target_time})")
         if current_time > self.target_time:
-            delta = current_time - self.target_time
+            # delta = current_time - self.target_time
+            # Since we are in the same day, if current time is greater than
+            # target time, we should execute the rule
+            return True
         else:
-            delta = self.target_time - current_time
+            # delta = self.target_time - current_time
+            # When we look at current_time and self.target_time
+            # We are in the same day. So if current_time is lagging
+            # behind, return false.
+            return False
 
         # Sleep for that interval of time
-        await trio.sleep(delta.seconds)
-
-        # Once this task wakes up, simply return True as waiting is over.
-        return True
+        # print(f"Sleeping for {delta.seconds} seconds...")
+        # await trio.sleep(delta.seconds)
 
     def __eq__(self, other):
         return self.instruction_type == other
