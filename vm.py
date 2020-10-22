@@ -1,4 +1,3 @@
-import logging
 import queue
 import threading
 import instructions
@@ -7,10 +6,7 @@ import json
 import trio
 import rule
 from parse import compile as pc
-
-format = "%(asctime)s: %(message)s"
-logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
-logging.info("root: Logging setup complete")
+from loguru import logger
 
 
 class VM:
@@ -43,35 +39,41 @@ class VM:
         self.task_queue = queue.Queue(self.TASK_QUEUE_BUFFER_SIZE)
         self.vm_thread = threading.Thread(target=lambda: trio.run(self.__starter))
         self.vm_thread.start()
+        logger.info("Started VM thread.")
 
     async def __starter(self):
         async with trio.open_nursery() as nursery:
             nursery.start_soon(self.task_spawner, nursery)
             # Started anything else required for the VM
-            logging.info("__starter: Started task_spawner")
+            logger.info("Started task spawner.")
 
     async def task_spawner(self, nursery):
         while self.run_vm_thread:
             if not self.task_queue.empty():
                 task = self.task_queue.get_nowait()
                 nursery.start_soon(self.__executor, task)
-                logging.info(f"task_spawner: Spawned a new task: {task}")
+                logger.info(f"Spawned a new task inside the VM: {task}")
 
             await trio.sleep(0)
 
     async def __executor(self, rule):
         """Evaluates a rule using a stack."""
-
+        logger.info(f"Executing: {rule}")
         # Stack used for evaluating a rule
         stack = []
 
         # Evaluate each expression
         for instruction in rule.instruction_stream:
 
+            # If the instruction is a logical AND,
+            # Pop operands from stack and perform AND operation
+            # And put the result back into the stack
             if instructions.InstructionConstant.LOGICAL_AND == instruction:
                 # Pop values from stack
                 op1 = stack.pop()
                 op2 = stack.pop()
+
+                logger.debug(f"Evaluating AND instruction - {op1} AND {op2}")
 
                 # Evaluate op1
                 op1_value = None
@@ -94,10 +96,15 @@ class VM:
                 # Perform logical AND and push it to stack
                 stack.append(op1_value and op2_value)
 
+            # If the instruction is a logical OR,
+            # Pop operands from stack and perform OR operation
+            # And put the result back into the stack
             elif instructions.InstructionConstant.LOGICAL_OR == instruction:
                 # Pop values from stack
                 op1 = stack.pop()
                 op2 = stack.pop()
+
+                logger.debug(f"Evaluating OR instruction - {op1} OR {op2}")
 
                 # Evaluate op1
                 op1_value = None
@@ -120,38 +127,32 @@ class VM:
                 # Perform logical AND and push it to stack
                 stack.append(op1_value or op2_value)
 
-            elif instructions.InstructionConstant.AT_TIME == instruction:
+            # It's probably an operand, just put it in the stack
+            else:
+                logger.debug(f"Appending instruction {instruction} to stack.")
                 stack.append(instruction)
 
-            elif instructions.InstructionConstant.AT_TIME_WITH_OCCURENCE == instruction:
-                stack.append(instruction)
+        last_item = stack.pop()
 
-            elif instructions.InstructionConstant.IS_RELAY_STATE == instruction:
-                stack.append(instruction)
+        # If the last value is an Instruction, then the entire rule only had one instruction.
+        # So evaluate the instruction and simply return it's value
+        if isinstance(last_item, instructions.BaseInstruction):
+            logger.info("Last item in stack is an unevaluated instruction.")
+            ret = await last_item.evaluate()
+            logger.debug(f"Evaluation of {rule} returned {ret}")
+            return ret
 
-            elif instructions.InstructionConstant.IS_RELAY_STATE_FOR == instruction:
-                stack.append(instruction)
-
-            elif instructions.InstructionConstant.CHECK_TEMPERATURE == instruction:
-                stack.append(instruction)
-
-            elif instructions.InstructionConstant.CHECK_TEMPERATURE_FOR == instruction:
-                stack.append(instruction)
-
-            elif instructions.InstructionConstant.CHECK_OCCUPANCY == instruction:
-                stack.append(instruction)
-
-            elif instructions.InstructionConstant.CHECK_OCCUPANCY_FOR == instruction:
-                stack.append(instruction)
-
-        # The last value would always be a bool, True or False
-        return stack.pop()
+        # It's just a boolean value, return it directly
+        else:
+            logger.debug(f"Evaluation of {rule} returned {last_item}")
+            return last_item
 
     def execute_rule(self, rule):
+        # This function will not return anything, it would directly execute the rule
         self.task_queue.put(rule)
 
     def stop(self):
-        logging.info("Shutting down VM thread. Awaiting join.")
+        logger.info("Shutting down VM thread. Awaiting join.")
         self.run_vm_thread = False
         self.vm_thread.join()
 
