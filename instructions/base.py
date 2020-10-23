@@ -31,17 +31,12 @@ class BaseInstruction:
     def __init__(self, json_data, rule):
         self.json_data = json_data
         self.rule = rule
+        self.validate_data()
 
-    def validate_schema(self, json_data):
-        # This statement will allow error to propagate upwards
-        # if an incorrect json_data string is passed.
-        parsed_data = json.loads(json_data)
-
+    def validate_data(self):
         # This will raise ValidationError or SchemaError,
         # both of which we'll allow to propagate upwards
-        jsonschema.validate(self.parsed_data, self.schema, format_checker=jsonschema.FormatChecker())
-
-        return parsed_data
+        jsonschema.validate(self.json_data, self.schema, format_checker=jsonschema.FormatChecker())
 
     def __str__(self):
         return f"<Instruction '{self.name}'>"

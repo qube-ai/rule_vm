@@ -274,11 +274,11 @@ class VM:
                 rule_obj.set_id(doc_id)
                 list_of_rules.append(rule_obj)
 
-            except ValidationError:
-                logger.error(f"ValidationError in parsing rule document -> {doc_id}")
+            except ValidationError as e:
+                logger.error(f"ValidationError in parsing rule document {doc_id} -> {e}")
 
-            except SchemaError:
-                logger.error(f"SchemaError in parsing rule document -> {doc_id}")
+            except SchemaError as e:
+                logger.error(f"SchemaError in parsing rule document {doc_id} -> {e}")
 
             except Exception as e:
                 logger.error(f"Some unknown error occurred. Error: {e}")
