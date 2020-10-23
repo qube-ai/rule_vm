@@ -1,6 +1,6 @@
 from .base import BaseInstruction
 from .base import InstructionConstant
-from .base import InstructionException
+from loguru import logger
 import store
 from typing import Dict
 
@@ -21,28 +21,24 @@ class IsRelayState(BaseInstruction):
         "required": ["operation", "device_id", "relay_index", "state"]
     }
 
-    def __init__(self, ins_data: Dict):
-        self.device_document = None
-        self.parsed_data = ins_data
-        self.device_id = self.parsed_data["device_id"]
-        self.relay_index = self.parsed_data["relay_index"]
-        self.state_to_check = self.parsed_data["state"]
-
-        # TODO Make the following code operational
-        # Check whether the relay_index value is less than the number of relays on the device itself
-        # device_doc = store.get_device_document_sync(self.device_id)
-        # relays = device_doc["relay"]
-
-        # If the relay_index is greater than the actual no. of relays, throw an error
-        # if self.relay_index >= len(relays):
-        #     raise InstructionException(f"relay_index:{self.relay_index} specified is greater than the number of relays:{len(relays)}")
+    def __init__(self, json_data: Dict, rule):
+        super(IsRelayState, self).__init__(json_data, rule)
+        self.device_id = self.json_data["device_id"]
+        self.relay_index = self.json_data["relay_index"]
+        self.target_state = self.json_data["state"]
 
     async def evaluate(self):
-        # Get the device document from DB
-        self.device_document = await store.get_device_document(self.device_id)
-        relay_status = self.device_document["relayStatus"]
+        current_state = await self.get_current_state(self.relay_index)
+        logger.debug(f"{self.rule}: Evaluating relay state(current_state == target_state) -> {current_state} == {self.target_state}")
+        if current_state == self.target_state:
+            return True
 
-        return relay_status[self.relay_index] == self.state_to_check
+        return False
+
+    async def get_current_state(self, relay_index):
+        document = await store.get_device_document(self.device_id)
+        relay_status = document.to_dict()["relayStatus"]
+        return relay_status[relay_index]
 
     def __eq__(self, other):
         return self.instruction_type == other
@@ -65,8 +61,8 @@ class IsRelayStateFor(IsRelayState):
         "required": ["operation", "device_id", "relay_index", "state"]
     }
 
-    def __init__(self, ins_data: Dict):
-        super(IsRelayStateFor, self).__init__(ins_data)
+    def __init__(self, json_data: Dict):
+        super(IsRelayStateFor, self).__init__(json_data)
         self.for_duration = self.parsed_data["for"]
 
         # fetch device document

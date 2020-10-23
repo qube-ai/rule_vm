@@ -86,4 +86,4 @@ class Rule:
         return self.rule_document
 
     def __str__(self):
-        return f"<Rule({len(self.instruction_stream)} Instructions): {self.id}>"
+        return f"<Rule({len(self.instruction_stream)}): {self.id}>"
