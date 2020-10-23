@@ -46,9 +46,11 @@ def load_rules_from_db() -> List:
 async def get_document(collection: str, document: str):
     # Connect to firebase and get that information somehow here
     # Also check if we have the data cached somewhere, then return it from cache
-    # TODO This source code is currently not compatible with Trio
-    # TODO Make sure you run it in a different thread to prevent thread blocking
-    doc = store.collection(collection).doc(document).get()
+
+    def f():
+        return store.collection(collection).document(document).get()
+    doc = await trio.to_thread.run_sync(f)
+
     if doc.exists:
         logger.debug(f"Fetched {doc} from Firestore.")
         return doc.to_dict()
