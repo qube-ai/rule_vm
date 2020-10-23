@@ -81,7 +81,12 @@ def get_device_document_sync(device_id: str):
 async def get_generated_data(device_id: str, count=5):
 
     def f():
-        store.collection("devices").document(device_id).collection("generatedData").limit_to_first(count)
+        return store.collection("devices").document(device_id).collection("generatedData").limit(count).get()
+    data = await trio.to_thread.run_sync(f)
+    list_of_docs = []
+    for x in data:
+        list_of_docs.append(x.to_dict())
 
-    return await trio.to_thread.run_sync(f)
+    logger.debug(f"Fetching generated data for {device_id}")
+    return list_of_docs
 

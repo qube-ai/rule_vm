@@ -7,6 +7,10 @@ class TestStore:
         data = store.get_device_document_sync("test-podnet-switch-1")
         assert data["type"] == "switch"
 
+    async def test_get_generated_data(self):
+        data = await store.get_generated_data("podnet-switch-1", 5)
+        assert len(data) == 5
+
     async def test_sleep(self):
         start_time = trio.current_time()
         await trio.sleep(1)
