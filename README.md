@@ -1,5 +1,10 @@
 # Virtual Machine
 
+## Run tests
+```
+$ pytest
+```
+
 ## Higher level objective
 The goal of this system is:
   - Support instructions/commands that make rules express and check powerful things
