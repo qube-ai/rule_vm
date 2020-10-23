@@ -3,6 +3,7 @@ from typing import List
 
 import instructions
 from instructions import InstructionConstant
+import store
 
 
 class RuleParsingException(Exception):
@@ -32,19 +33,20 @@ class Rule:
         "logical_or": instructions.LogicalOr,
         "energy_meter": instructions.EnergyMeter,
     }
+    id = ""
 
     def __init__(self, rule_dict: Dict):
         """Converts list of dictionaries into rule object"""
 
         self.instruction_stream: List = []
-
+        self.rule_document = None
         # Each rule has a bunch of instructions, Parse the instructions
         # Add add them to instruction_stream instance variable
         # Parse individual instructions
         for ins_data in rule_dict:
             if ins_data["operation"] in Rule.instruction_lut:
                 Instruction = Rule.instruction_lut[ins_data["operation"]]
-                self.instruction_stream.append(Instruction(ins_data))
+                self.instruction_stream.append(Instruction(ins_data, self))
 
             else:
                 raise InvalidInstructionException(f"Unknown instruction: {ins_data['operation']}")
@@ -52,7 +54,7 @@ class Rule:
         self.infix_to_postfix()
 
     def infix_to_postfix(self):
-        # Perform infix to postfix conversion to make it easier for the VM to evaluate the rule
+        """Perform infix to postfix conversion to make it easier for the VM to evaluate the rule"""
         stack = []
         temp_ins = []
 
@@ -75,6 +77,13 @@ class Rule:
             temp_ins.append(ins)
 
         self.instruction_stream = temp_ins
+
+    def set_id(self, id):
+        self.id = id
+
+    async def get_rule_document(self):
+        self.rule_document = await store.get_document("rules", self.id)
+        return self.rule_document
 
     def __str__(self):
         return f"<Rule: {len(self.instruction_stream)} Instructions>"

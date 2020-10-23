@@ -2,9 +2,7 @@ from vm import VM
 import time
 
 rule_string = '''
-AT_TIME 10:50:30+05:30
-OR
-AT_TIME 12:30:00+05:30
+AT_TIME_WITH_OCCURRENCE 00:30:00+05:30 9
 '''
 rule_obj = VM.parse_from_string(rule_string)
 print(rule_obj)

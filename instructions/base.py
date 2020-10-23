@@ -26,6 +26,11 @@ class InstructionConstant(Enum):
 class BaseInstruction:
 
     name = 'BASE_INSTRUCTION'
+    rule = None
+
+    def __init__(self, json_data, rule):
+        self.json_data = json_data
+        self.rule = rule
 
     def validate_schema(self, json_data):
         # This statement will allow error to propagate upwards

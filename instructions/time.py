@@ -1,11 +1,11 @@
 from typing import Dict
 
 import arrow
+from loguru import logger
 
 import store
 from .base import BaseInstruction
 from .base import InstructionConstant
-from loguru import logger
 
 
 # TODO need to create a Rule Statistics to prevent the execution of same rule multiple times.
@@ -30,8 +30,8 @@ class AtTime(BaseInstruction):
         "required": ["operation", "time"]
     }
 
-    def __init__(self, json_data: Dict):
-        self.json_data = json_data
+    def __init__(self, json_data: Dict, rule):
+        super(AtTime, self).__init__(json_data, rule)
         self.time_string = self.json_data["time"]
         self.target_time = None
 
@@ -81,21 +81,25 @@ class AtTimeWithOccurrence(AtTime):
         "required": ["operation", "time"]
     }
 
-    def __init__(self, json_data: Dict):
-        super(AtTimeWithOccurrence, self).__init__(json_data)
+    def __init__(self, json_data: Dict, rule):
+        super(AtTimeWithOccurrence, self).__init__(json_data, rule)
         self.occurrence: int = self.json_data["occurrence"]
 
     async def evaluate(self):
-        document = await store.get_document("collection", "document")
-        self.occurrence = document["occurrence"]
+        is_true = await super().evaluate()
 
-        if self.occurrence > 0:
-            # Decrement the occurrence and update the DB
-            self.occurrence -= 1
-            # store.update_document()
-            # TODO Update the DB with the updated value
+        if is_true and self.occurrence > 0:
+            rule_doc = await self.rule.get_rule_document()
+            rule_doc_dict = rule_doc.to_dict()
+            for cond in rule_doc_dict["conditions"]:
+                if cond["occurrence"] == self.occurrence and cond["operation"].lower() == self.json_data["operation"].lower() and cond["time"] == self.json_data["time"]:
+                    cond["occurrence"] -= 1
+                    self.occurrence -= 1
+                    logger.debug(f"Decremented occurrence count for {self.rule} to {self.occurrence}")
 
-            return await super().evaluate()
+            # Update the document finally
+            await store.update_document("rules", rule_doc.id, rule_doc_dict)
+            logger.debug(f"Updated Firestore with new occurrence value: {self.occurrence}")
 
         return False
 

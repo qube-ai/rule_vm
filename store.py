@@ -1,48 +1,15 @@
 from typing import Dict
-from typing import List
 
 import firebase_admin
-from firebase_admin import firestore, credentials
-from jsonschema import ValidationError, SchemaError
-from loguru import logger
 import trio
-
-from vm import VM
+from firebase_admin import firestore, credentials
+from loguru import logger
 
 FIREBASE_CREDENTIALS_FILE = "firebase_creds.json"
 
 cred = credentials.Certificate(FIREBASE_CREDENTIALS_FILE)
 firebase_app = firebase_admin.initialize_app(cred)
 store = firestore.client()
-
-
-def load_rules_from_db() -> List:
-    rules_collection = store.collection("rules").get()
-    list_of_rules = []
-
-    # Iterate over all documents
-    for document in rules_collection:
-        d = document.to_dict()
-        doc_id = document.id
-
-        if "conditions" in d:
-            rule_dict = d["conditions"]
-
-            try:
-                rule_obj = VM.parse_from_dict(rule_dict)
-                rule_obj.set_id(doc_id)
-
-                list_of_rules.append(rule_obj)
-            except ValidationError:
-                logger.error(f"ValidationError in parsing rule document -> {doc_id}")
-            except SchemaError:
-                logger.error(f"SchemaError in parsing rule document -> {doc_id}")
-            except Exception as e:
-                logger.error(f"Some unknown error occured. Error: {e}")
-        else:
-            logger.error(f"Missing `conditions` key in {doc_id}")
-
-    return list_of_rules
 
 
 async def get_document(collection: str, document: str):
@@ -58,13 +25,6 @@ async def get_document(collection: str, document: str):
         return doc
     else:
         return False
-
-
-async def update_document(collection: str, document: str, updated_dict: Dict):
-    # Directly update documents in firebase and redis
-    # TODO make it trio compatible async
-    doc_ref = store.collection(collection).document(document)
-    doc_ref.update(updated_dict)
 
 
 async def get_device_document(device_id: str):
@@ -93,4 +53,16 @@ async def get_generated_data(device_id: str, count=5):
 
     logger.debug(f"Fetching generated data for {device_id}")
     return list_of_docs
+
+
+def get_all_rules():
+    return store.collection("rules").get()
+
+
+async def update_document(collection, document, data):
+    def f():
+        doc = store.collection(collection).document(document)
+        doc.update(data)
+
+    await trio.to_thread.run_sync(f)
 

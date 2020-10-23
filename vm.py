@@ -3,11 +3,14 @@ import threading
 import instructions
 import json
 import time
+import sys
 
 import trio
 import rule
 from parse import compile as pc
 from loguru import logger
+import store
+from jsonschema import ValidationError, SchemaError
 
 
 class VM:
@@ -163,12 +166,16 @@ class VM:
     def waited_stop(self):
         # Stops for all currently executing tasks to finish and then shuts down the VM
         while True:
-            if self.TASKS_RUNNING == 0:
-                self.stop()
-                break
-            else:
-                logger.info(f"Waiting for {self.TASKS_RUNNING} to finish.")
-            time.sleep(1)
+            try:
+                if self.TASKS_RUNNING == 0:
+                    self.stop()
+                    break
+                else:
+                    logger.info(f"Waiting for {self.TASKS_RUNNING} to finish.")
+                time.sleep(1)
+            except KeyboardInterrupt:
+                logger.error("KeyboardInterrupt raised. Exiting.")
+                sys.exit(0)
 
     @staticmethod
     def parse_from_string(rule_script: str) -> rule.Rule:
@@ -255,3 +262,29 @@ class VM:
     @staticmethod
     def parse_from_dict(rule_dict) -> rule.Rule:
         return rule.Rule(rule_dict)
+
+    def load_rules_from_db(self):
+        rules = store.get_all_rules()
+        list_of_rules = []
+        for r in rules:
+            doc_id = r.id
+
+            try:
+                rule_obj = VM.parse_from_dict(r.to_dict()["conditions"])
+                rule_obj.set_id(doc_id)
+                list_of_rules.append(rule_obj)
+
+            except ValidationError:
+                logger.error(f"ValidationError in parsing rule document -> {doc_id}")
+
+            except SchemaError:
+                logger.error(f"SchemaError in parsing rule document -> {doc_id}")
+
+            except Exception as e:
+                logger.error(f"Some unknown error occurred. Error: {e}")
+
+        logger.info(f"{len(list_of_rules)} rules were fetched from DB")
+
+        # Execute the rules
+        for x in list_of_rules:
+            self.execute_rule(x)
