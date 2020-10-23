@@ -36,7 +36,7 @@ class BaseInstruction:
     def validate_data(self):
         # This will raise ValidationError or SchemaError,
         # both of which we'll allow to propagate upwards
-        jsonschema.validate(self.json_data, self.schema, format_checker=jsonschema.FormatChecker())
+        jsonschema.validate(self.json_data, self.schema, format_checker=jsonschema.draft7_format_checker)
 
     def __str__(self):
         return f"<Instruction '{self.name}'>"
