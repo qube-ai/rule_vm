@@ -268,7 +268,7 @@ class VM:
         list_of_rules = []
         for r in rules:
             doc_id = r.id
-
+            logger.debug(f"Parsing and constructing a rule obj for {doc_id}")
             try:
                 rule_obj = VM.parse_from_dict(r.to_dict()["conditions"])
                 rule_obj.set_id(doc_id)
@@ -283,7 +283,7 @@ class VM:
             except Exception as e:
                 logger.error(f"Some unknown error occurred. Error: {e}")
 
-        logger.info(f"{len(list_of_rules)} rules were fetched from DB")
+        logger.info(f"{len(list_of_rules)} rules were loaded in VM")
 
         # Execute the rules
         for x in list_of_rules:

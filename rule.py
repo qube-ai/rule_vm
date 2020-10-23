@@ -28,7 +28,7 @@ class Rule:
         "dw_state": instructions.DoorWindowState,
         "dw_state_for": instructions.DoorWindowStateFor,
         "occupancy_state_for": instructions.CheckOccupancyFor,
-        "occupancy_state": instructions.CheckOccupancy,
+        "occupancy": instructions.CheckOccupancy,
         "logical_and": instructions.LogicalAnd,
         "logical_or": instructions.LogicalOr,
         "energy_meter": instructions.EnergyMeter,
@@ -86,4 +86,4 @@ class Rule:
         return self.rule_document
 
     def __str__(self):
-        return f"<Rule: {len(self.instruction_stream)} Instructions>"
+        return f"<Rule({len(self.instruction_stream)} Instructions): {self.id}>"

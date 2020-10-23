@@ -56,7 +56,9 @@ async def get_generated_data(device_id: str, count=5):
 
 
 def get_all_rules():
-    return store.collection("rules").get()
+    data = store.collection("rules").get()
+    logger.debug(f"Fetched {len(data)} rules from DB")
+    return data
 
 
 async def update_document(collection, document, data):
