@@ -22,23 +22,25 @@ def load_rules_from_db() -> List:
 
     # Iterate over all documents
     for document in rules_collection:
-        d = document.get_dict()
-        uid = d["uid"]
+        d = document.to_dict()
+        doc_id = document.id
 
         if "conditions" in d:
             rule_dict = d["conditions"]
 
             try:
                 rule_obj = VM.parse_from_dict(rule_dict)
+                rule_obj.set_id(doc_id)
+
                 list_of_rules.append(rule_obj)
             except ValidationError:
-                logger.error(f"ValidationError in parsing rule document -> {uid}")
+                logger.error(f"ValidationError in parsing rule document -> {doc_id}")
             except SchemaError:
-                logger.error(f"SchemaError in parsing rule document -> {uid}")
+                logger.error(f"SchemaError in parsing rule document -> {doc_id}")
             except Exception as e:
                 logger.error(f"Some unknown error occured. Error: {e}")
         else:
-            logger.error(f"Missing `conditions` key in {uid}")
+            logger.error(f"Missing `conditions` key in {doc_id}")
 
     return list_of_rules
 
@@ -53,7 +55,7 @@ async def get_document(collection: str, document: str):
 
     if doc.exists:
         logger.debug(f"Fetched {doc} from Firestore.")
-        return doc.to_dict()
+        return doc
     else:
         return False
 
