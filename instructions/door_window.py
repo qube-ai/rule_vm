@@ -39,6 +39,9 @@ class DoorWindowState(BaseInstruction):
         logger.debug(f"Current state of is {state}")
         return state
 
+    def __eq__(self, other):
+        return self.instruction_type == other
+
 
 class DoorWindowStateFor(BaseInstruction):
     instruction_type = InstructionConstant.DOOR_WINDOW_STATE_FOR
