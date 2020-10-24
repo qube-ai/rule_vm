@@ -18,10 +18,10 @@ async def get_document(collection: str, document: str):
 
     def f():
         return store.collection(collection).document(document).get()
+
     doc = await trio.to_thread.run_sync(f)
 
     if doc.exists:
-        logger.debug(f"Fetched {doc} from Firestore.")
         return doc
     else:
         return False
@@ -43,9 +43,15 @@ def get_device_document_sync(device_id: str):
 
 
 async def get_generated_data(device_id: str, count=5):
-
     def f():
-        return store.collection("devices").document(device_id).collection("generatedData").limit(count).get()
+        return (
+            store.collection("devices")
+            .document(device_id)
+            .collection("generatedData")
+            .limit(count)
+            .get()
+        )
+
     data = await trio.to_thread.run_sync(f)
     list_of_docs = []
     for x in data:
@@ -67,4 +73,3 @@ async def update_document(collection, document, data):
         doc.update(data)
 
     await trio.to_thread.run_sync(f)
-

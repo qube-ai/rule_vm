@@ -1,10 +1,9 @@
 import json
-import time
 
 from google.cloud import pubsub_v1
 from loguru import logger
-from vm import VM
 
+from vm import VM
 
 # Start the VM and add rules from DB
 rule_vm = VM()
@@ -21,9 +20,7 @@ def door_sensor_dev_callback(message):
         logger.error("Unable to decode JSON")
         return
 
-    conditions = [
-        "state" in data_packet
-    ]
+    conditions = ["state" in data_packet]
 
     if all(conditions):
         # Parsed data packet
@@ -51,7 +48,9 @@ def door_sensor_dev_callback(message):
         message.ack()
 
     else:
-        logger.error("Some keys were not found in the incoming packet. Discarding message.")
+        logger.error(
+            "Some keys were not found in the incoming packet. Discarding message."
+        )
         logger.debug(f"Packet with incorrect keys -> {data_packet}")
 
 
@@ -72,7 +71,7 @@ def energy_meter_dev_callback(message):
         "frequency" in data_packet,
         "pf" in data_packet,
         "power" in data_packet,
-        "energy" in data_packet
+        "energy" in data_packet,
     ]
 
     if all(conditions):
@@ -106,7 +105,9 @@ def energy_meter_dev_callback(message):
         message.ack()
 
     else:
-        logger.error("Some keys were not found in the incoming packet. Discarding message.")
+        logger.error(
+            "Some keys were not found in the incoming packet. Discarding message."
+        )
         logger.debug(f"Packet with incorrect keys -> {data_packet}")
 
 
@@ -120,9 +121,7 @@ def occupancy_dev_callback(message):
         logger.error("Unable to decode JSON")
         return
 
-    conditions = [
-        True
-    ]
+    conditions = [True]
 
     if all(conditions):
         # Parsed data packet
@@ -147,7 +146,9 @@ def occupancy_dev_callback(message):
         message.ack()
 
     else:
-        logger.error("Some keys were not found in the incoming packet. Discarding message.")
+        logger.error(
+            "Some keys were not found in the incoming packet. Discarding message."
+        )
         logger.debug(f"Packet with incorrect keys -> {data_packet}")
 
 
@@ -161,10 +162,7 @@ def switch_device_callback(message):
         logger.error("Unable to decode JSON")
         return
 
-    conditions = [
-        "relay_state" in data_packet,
-        "temperature_sensor" in data_packet
-    ]
+    conditions = ["relay_state" in data_packet, "temperature_sensor" in data_packet]
 
     if all(conditions):
 
@@ -193,7 +191,9 @@ def switch_device_callback(message):
         message.ack()
 
     else:
-        logger.error("Some keys were not found in the incoming packet. Discarding message.")
+        logger.error(
+            "Some keys were not found in the incoming packet. Discarding message."
+        )
         logger.debug(f"Packet with incorrect keys -> {data_packet}")
 
 
@@ -242,7 +242,9 @@ with subscriber:
         logger.error(f"Request timed out. Error: {e}")
 
     except Exception as ex:
-        logger.error(f"Some error happened in the underlying execution. Error: {ex}")
+        logger.error(
+            f"Some error happened in the underlying execution. PubSub Callback Error: {ex}"
+        )
         door_window_future.cancel()
         energy_meter_future.cancel()
         occupancy_future.cancel()
