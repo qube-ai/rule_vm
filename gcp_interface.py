@@ -37,12 +37,8 @@ def door_sensor_dev_callback(message):
         # Log the prepared packet
         logger.debug(f"Parsed door sensor device packet -> {parsed_packet}")
 
-        # Send the reading to rule engine
-        # If the packet goes through without any errors, ack
-        # If there is some error while executing it's rule, dont ack the msg
-        # main(last_reading)
-        # engine.execute_rule(parsed_packet)
-        # TODO raise the correct rule to execute here depending on the message
+        # Execute all rules that depend on the state of given device_id
+        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
 
         # Acknowledge Cloud PubSub message
         message.ack()
@@ -95,11 +91,8 @@ def energy_meter_dev_callback(message):
         # Log the prepared packet
         logger.debug(f"Parsed energy meter device packet -> {parsed_packet}")
 
-        # Send the reading to rule engine
-        # If the packet goes through without any errors, ack
-        # If there is some error while executing it's rule, dont ack the msg
-        # engine.execute_rule(parsed_packet)
-        # TODO raise the correct rule to execute here depending on the message
+        # Execute all rules that depend on the state of given device_id
+        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
 
         # Acknowledge Cloud PubSub message
         message.ack()
@@ -136,11 +129,8 @@ def occupancy_dev_callback(message):
         # Log the prepared packet
         logger.debug(f"Parsed door sensor device packet -> {parsed_packet}")
 
-        # Send the reading to rule engine
-        # If the packet goes through without any errors, ack
-        # If there is some error while executing it's rule, dont ack the msg
-        # engine.execute_rule(parsed_packet)
-        # TODO raise the correct rule to execute here depending on the message
+        # Execute all rules that depend on the state of given device_id
+        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
 
         # Acknowledge Cloud PubSub message
         message.ack()
@@ -181,11 +171,8 @@ def switch_device_callback(message):
         # Log the prepared packet
         logger.debug(f"Parsed door sensor device packet -> {parsed_packet}")
 
-        # Send the reading to rule engine
-        # If the packet goes through without any errors, ack
-        # If there is some error while executing it's rule, dont ack the msg
-        # engine.execute_rule(parsed_packet)
-        # TODO raise the correct rule to execute here depending on the message
+        # Execute all rules that depend on the state of given device_id
+        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
 
         # Acknowledge Cloud PubSub message
         message.ack()
