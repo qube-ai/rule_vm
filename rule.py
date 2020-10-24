@@ -115,3 +115,6 @@ class Rule:
 
     def __str__(self):
         return f"<Rule({len(self.instruction_stream)}): {self.id}>"
+
+    def __eq__(self, other):
+        return self.id == other

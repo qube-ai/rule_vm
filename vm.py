@@ -17,6 +17,7 @@ import store
 class VM:
     TASK_QUEUE_BUFFER_SIZE = 10
     TASKS_RUNNING = 0
+    LIST_OF_RULES = []
     # Used for parsing rules in string format
     instructions_pattern = [
         pc("AT_TIME {time}"),
@@ -297,7 +298,8 @@ class VM:
                     conditions=document["conditions"],
                     actions=document["actions"],
                 )
-                list_of_rules.append(rule_obj)
+                if rule_obj not in self.LIST_OF_RULES:
+                    self.LIST_OF_RULES.append(rule_obj)
 
             except ValidationError as e:
                 logger.error(
@@ -313,5 +315,12 @@ class VM:
         logger.info(f"{len(list_of_rules)} rules were loaded in VM")
 
         # Execute the rules
-        for x in list_of_rules:
-            self.execute_rule(x)
+        for r in self.LIST_OF_RULES:
+            self.execute_rule(r)
+
+    def execute_all_dependent_rules(self, device_id):
+        logger.info(f"Looking for all rules depending on {device_id}")
+
+        for r in self.LIST_OF_RULES:
+            if device_id in r.dependent_devices:
+                self.execute_rule(r)
