@@ -136,7 +136,7 @@ Generic condition: `<Door Window, Device ID, State, For how long(min)>`
 Is dw1 open?
 ```json
 {
-    "operation": "door_window_state",
+    "operation": "dw_state",
     "device_id": "dw-1",
     "state": "open"
 }
@@ -145,7 +145,7 @@ Is dw1 open?
 Is dw1 open for more than 10 minutes? 
 ```json
 {
-    "operation": "door_window_state_for",
+    "operation": "dw_state_for",
     "device_id": "dw-1",
     "state": "open",
     "for": 20

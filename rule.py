@@ -31,13 +31,15 @@ class Rule:
         self.conditions = conditions
         self.actions = actions
         # Devices that this rule uses for final evaluation
-        self.devices = []
+        self.dependent_devices = []
 
         self.instruction_stream = []
         self.action_stream = []
 
         self.parse_conditions()
         self.parse_actions()
+        self.determine_device_dependencies()
+        logger.debug(f"{self} dependent devices -> {self.dependent_devices}")
 
     def parse_conditions(self):
         for ins_data in self.conditions:
@@ -80,6 +82,12 @@ class Rule:
             temp_ins.append(ins)
 
         self.instruction_stream = temp_ins
+
+    def determine_device_dependencies(self):
+        """Lists out all the devices on which the result of rule evaluation could change."""
+        for ins in self.instruction_stream:
+            if hasattr(ins, "device_id"):
+                self.dependent_devices.append(ins.device_id)
 
     def parse_actions(self):
         i = 0

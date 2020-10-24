@@ -1,9 +1,11 @@
+from typing import Dict
+
+import arrow
+from loguru import logger
+
+import store
 from .base import BaseInstruction
 from .base import InstructionConstant
-from typing import Dict
-from loguru import logger
-import store
-import arrow
 
 
 class CheckOccupancy(BaseInstruction):
@@ -26,6 +28,7 @@ class CheckOccupancy(BaseInstruction):
     def __init__(self, json_data: Dict, rule):
         super(CheckOccupancy, self).__init__(json_data, rule)
         self.target_state = self.json_data["state"].lower()
+        self.device_id = self.json_data["device_id"]
 
     async def evaluate(self):
         current_state = await self.get_current_state()
