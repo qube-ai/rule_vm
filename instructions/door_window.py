@@ -6,7 +6,7 @@ import store
 
 
 class DoorWindowState(BaseInstruction):
-    instruction_type = InstructionConstant.DOOR_WINDOW_STATE
+    instruction_type = InstructionConstant.DW_STATE
     name = "DW_STATE"
 
     schema = {
@@ -15,9 +15,9 @@ class DoorWindowState(BaseInstruction):
         "properties": {
             "operation": {"type": "string"},
             "device_id": {"type": "string"},
-            "state": {"type": "string", "enum": ["open", "close"]}
+            "state": {"type": "string", "enum": ["open", "close"]},
         },
-        "required": ["operation", "device_id", "state"]
+        "required": ["operation", "device_id", "state"],
     }
 
     def __init__(self, json_data: Dict, rule):
@@ -26,7 +26,9 @@ class DoorWindowState(BaseInstruction):
 
     async def evaluate(self):
         current_state = await self.get_current_state()
-        logger.debug(f"Comparing door window state {current_state} == {self.target_state}")
+        logger.debug(
+            f"Comparing door window state {current_state} == {self.target_state}"
+        )
         if current_state == self.target_state:
             return True
 
@@ -44,5 +46,5 @@ class DoorWindowState(BaseInstruction):
 
 
 class DoorWindowStateFor(BaseInstruction):
-    instruction_type = InstructionConstant.DOOR_WINDOW_STATE_FOR
+    instruction_type = InstructionConstant.DW_STATE_FOR
     name = "DW_STATE_FOR"

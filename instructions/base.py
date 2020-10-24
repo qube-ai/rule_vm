@@ -1,4 +1,3 @@
-import json
 from enum import Enum
 
 import jsonschema
@@ -6,26 +5,26 @@ import jsonschema
 
 class InstructionConstant(Enum):
     # Operators
-    LOGICAL_AND = 1
-    LOGICAL_OR = 2
+    LOGICAL_AND = "LOGICAL_AND"
+    LOGICAL_OR = "LOGICAL_OR"
 
     # Operands
-    AT_TIME = 3
-    AT_TIME_WITH_OCCURENCE = 4
-    IS_RELAY_STATE = 5
-    IS_RELAY_STATE_FOR = 6
-    CHECK_TEMPERATURE = 7
-    CHECK_TEMPERATURE_FOR = 8
-    DOOR_WINDOW_STATE = 9
-    DOOR_WINDOW_STATE_FOR = 10
-    CHECK_OCCUPANCY_FOR = 11
-    CHECK_OCCUPANCY = 12
-    ENERGY_METER = 13
+    AT_TIME = "AT_TIME"
+    AT_TIME_WITH_OCCURRENCE = "AT_TIME_WITH_OCCURRENCE"
+    RELAY_STATE = "RELAY_STATE"
+    RELAY_STATE_FOR = "RELAY_STATE_FOR"
+    TEMPERATURE = "TEMPERATURE"
+    TEMPERATURE_FOR = "TEMPERATURE_FOR"
+    DW_STATE = "DW_STATE"
+    DW_STATE_FOR = "DW_STATE_FOR"
+    OCCUPANCY = "OCCUPANCY"
+    OCCUPANCY_FOR = "OCCUPANCY_FOR"
+    ENERGY_METER = "ENERGY_METER"
 
 
 class BaseInstruction:
 
-    name = 'BASE_INSTRUCTION'
+    name = "BASE_INSTRUCTION"
     rule = None
 
     def __init__(self, json_data, rule):
@@ -36,7 +35,9 @@ class BaseInstruction:
     def validate_data(self):
         # This will raise ValidationError or SchemaError,
         # both of which we'll allow to propagate upwards
-        jsonschema.validate(self.json_data, self.schema, format_checker=jsonschema.draft7_format_checker)
+        jsonschema.validate(
+            self.json_data, self.schema, format_checker=jsonschema.draft7_format_checker
+        )
 
     def __str__(self):
         return f"<Instruction '{self.name}'>"

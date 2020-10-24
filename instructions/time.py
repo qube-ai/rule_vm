@@ -25,9 +25,9 @@ class AtTime(BaseInstruction):
         "type": "object",
         "properties": {
             "operation": {"type": "string"},
-            "time": {"type": "string", "format": "time"}
+            "time": {"type": "string", "format": "time"},
         },
-        "required": ["operation", "time"]
+        "required": ["operation", "time"],
     }
 
     def __init__(self, json_data: Dict, rule):
@@ -42,11 +42,16 @@ class AtTime(BaseInstruction):
         # Expected time, 09:42:32+05:30
         temp = arrow.get(self.time_string, "HH:mm:ssZZ")
         current_time = arrow.now(temp.tzinfo)
-        self.target_time = temp.shift(years=current_time.year - 1, months=current_time.month - 1,
-                                      days=current_time.day - 1)
+        self.target_time = temp.shift(
+            years=current_time.year - 1,
+            months=current_time.month - 1,
+            days=current_time.day - 1,
+        )
 
         # delta = 0
-        logger.debug(f"Evaluating {self.instruction_type}. Current time({current_time}) and Target time({self.target_time})")
+        logger.debug(
+            f"Evaluating {self.instruction_type}. Current time({current_time}) and Target time({self.target_time})"
+        )
         if current_time > self.target_time:
             # delta = current_time - self.target_time
             # Since we are in the same day, if current time is greater than
@@ -68,7 +73,7 @@ class AtTime(BaseInstruction):
 
 
 class AtTimeWithOccurrence(AtTime):
-    instruction_type = InstructionConstant.AT_TIME_WITH_OCCURENCE
+    instruction_type = InstructionConstant.AT_TIME_WITH_OCCURRENCE
     name = "AT_TIME_WITH_OCCURRENCE"
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
@@ -76,9 +81,9 @@ class AtTimeWithOccurrence(AtTime):
         "properties": {
             "operation": {"type": "string"},
             "time": {"type": "string", "format": "time"},
-            "occurence": {"type": "integer", "exclusiveMinimum": 0}
+            "occurence": {"type": "integer", "exclusiveMinimum": 0},
         },
-        "required": ["operation", "time"]
+        "required": ["operation", "time"],
     }
 
     def __init__(self, json_data: Dict, rule):
@@ -92,14 +97,22 @@ class AtTimeWithOccurrence(AtTime):
             rule_doc = await self.rule.get_rule_document()
             rule_doc_dict = rule_doc.to_dict()
             for cond in rule_doc_dict["conditions"]:
-                if cond["occurrence"] == self.occurrence and cond["operation"].lower() == self.json_data["operation"].lower() and cond["time"] == self.json_data["time"]:
+                if (
+                    cond["occurrence"] == self.occurrence
+                    and cond["operation"].lower() == self.json_data["operation"].lower()
+                    and cond["time"] == self.json_data["time"]
+                ):
                     cond["occurrence"] -= 1
                     self.occurrence -= 1
-                    logger.debug(f"Decremented occurrence count for {self.rule} to {self.occurrence}")
+                    logger.debug(
+                        f"Decremented occurrence count for {self.rule} to {self.occurrence}"
+                    )
 
             # Update the document finally
             await store.update_document("rules", rule_doc.id, rule_doc_dict)
-            logger.debug(f"Updated Firestore with new occurrence value: {self.occurrence}")
+            logger.debug(
+                f"Updated Firestore with new occurrence value: {self.occurrence}"
+            )
 
         return False
 

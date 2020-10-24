@@ -7,7 +7,7 @@ from typing import Dict
 
 class IsRelayState(BaseInstruction):
 
-    instruction_type = InstructionConstant.IS_RELAY_STATE
+    instruction_type = InstructionConstant.RELAY_STATE
     name = "RELAY_STATE"
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
@@ -16,9 +16,9 @@ class IsRelayState(BaseInstruction):
             "operation": {"type": "string"},
             "device_id": {"type": "string"},
             "relay_index": {"type": "integer", "maximum": 64, "minimum": 0},
-            "state": {"type": "integer", "minimum": 0, "maximum": 1}
+            "state": {"type": "integer", "minimum": 0, "maximum": 1},
         },
-        "required": ["operation", "device_id", "relay_index", "state"]
+        "required": ["operation", "device_id", "relay_index", "state"],
     }
 
     def __init__(self, json_data: Dict, rule):
@@ -29,7 +29,9 @@ class IsRelayState(BaseInstruction):
 
     async def evaluate(self):
         current_state = await self.get_current_state(self.relay_index)
-        logger.debug(f"{self.rule}: Evaluating relay state(current_state == target_state) -> {current_state} == {self.target_state}")
+        logger.debug(
+            f"{self.rule}: Evaluating relay state(current_state == target_state) -> {current_state} == {self.target_state}"
+        )
         if current_state == self.target_state:
             return True
 
@@ -46,7 +48,7 @@ class IsRelayState(BaseInstruction):
 
 class IsRelayStateFor(IsRelayState):
 
-    instruction_type = InstructionConstant.IS_RELAY_STATE_FOR
+    instruction_type = InstructionConstant.RELAY_STATE_FOR
     name = "RELAY_STATE_FOR"
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
@@ -56,9 +58,9 @@ class IsRelayStateFor(IsRelayState):
             "device_id": {"type": "string"},
             "relay_index": {"type": "integer", "maximum": 64, "minimum": 0},
             "state": {"type": "integer", "minimum": 0, "maximum": 1},
-            "for": {"type": "integer"}
+            "for": {"type": "integer"},
         },
-        "required": ["operation", "device_id", "relay_index", "state"]
+        "required": ["operation", "device_id", "relay_index", "state"],
     }
 
     def __init__(self, json_data: Dict):

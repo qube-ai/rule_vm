@@ -7,18 +7,20 @@ import arrow
 
 
 class CheckOccupancy(BaseInstruction):
-    instruction_type = InstructionConstant.CHECK_OCCUPANCY
+    instruction_type = InstructionConstant.OCCUPANCY
     name = "CHECK_OCCUPANCY"
-    OCCUPANCY_SENSOR_DATA_INTERVAL = 1 * 60   # Device sends data every 1 minute, till the device is on
+    OCCUPANCY_SENSOR_DATA_INTERVAL = (
+        1 * 60
+    )  # Device sends data every 1 minute, till the device is on
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
             "operation": {"type": "string"},
             "device_id": {"type": "string"},
-            "state": {"type": "string", "enum": ["occupied", "unoccupied"]}
+            "state": {"type": "string", "enum": ["occupied", "unoccupied"]},
         },
-        "required": ["operation", "device_id", "state"]
+        "required": ["operation", "device_id", "state"],
     }
 
     def __init__(self, json_data: Dict, rule):
@@ -27,7 +29,9 @@ class CheckOccupancy(BaseInstruction):
 
     async def evaluate(self):
         current_state = await self.get_current_state()
-        logger.debug(f"Evaluating occupancy sensor (current_state == target_state) -> {current_state} == {self.target_state}")
+        logger.debug(
+            f"Evaluating occupancy sensor (current_state == target_state) -> {current_state} == {self.target_state}"
+        )
         if current_state == self.target_state:
             return True
 
@@ -37,7 +41,7 @@ class CheckOccupancy(BaseInstruction):
         logger.debug(f"Getting current state for {self.json_data['device_id']}")
         document = await store.get_generated_data(self.json_data["device_id"], 1)
         gen_datetime = arrow.get(document[0]["creation_timestamp"])
-        curr_datetime = arrow.now('UTC')
+        curr_datetime = arrow.now("UTC")
 
         delta = (curr_datetime - gen_datetime).total_seconds()
         logger.debug(f"Last message from device was received {delta} seconds ago")
@@ -54,5 +58,5 @@ class CheckOccupancy(BaseInstruction):
 
 
 class CheckOccupancyFor(BaseInstruction):
-    instruction_type = InstructionConstant.CHECK_OCCUPANCY_FOR
+    instruction_type = InstructionConstant.OCCUPANCY_FOR
     name = "CHECK_OCCUPANCY_FOR"
