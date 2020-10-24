@@ -55,13 +55,13 @@ class VM:
         while self.run_vm_thread:
             if not self.task_queue.empty():
                 task = self.task_queue.get_nowait()
-                nursery.start_soon(self.__executor, task)
+                nursery.start_soon(self.__executor, nursery, task)
                 logger.info(f"Spawned a new task inside the VM: {task}")
                 self.TASKS_RUNNING += 1
 
             await trio.sleep(0)
 
-    async def __executor(self, rule):
+    async def __executor(self, nursery, rule):
         """Evaluates a rule using a stack."""
         logger.info(f"Executing: {rule}")
         # Stack used for evaluating a rule
@@ -139,20 +139,30 @@ class VM:
 
         last_item = stack.pop()
 
+        execute_action = False
         # If the last value is an Instruction, then the entire rule only had one instruction.
         # So evaluate the instruction and simply return it's value
         if isinstance(last_item, instructions.BaseInstruction):
             logger.info("Last item in stack is an unevaluated instruction.")
-            ret = await last_item.evaluate()
-            logger.debug(f"Evaluation of {rule} returned {ret}")
+            execute_action = await last_item.evaluate()
+            logger.debug(f"Evaluation of {rule} returned {execute_action}")
             self.TASKS_RUNNING -= 1
-            return ret
 
         # It's just a boolean value, return it directly
         else:
             logger.debug(f"Evaluation of {rule} returned {last_item}")
             self.TASKS_RUNNING -= 1
-            return last_item
+            execute_action = last_item
+
+        # Code to perform action
+        if execute_action:
+            logger.info(f"Executing {len(rule.action_stream)} action(s)")
+            for action in rule.action_stream:
+                logger.info(f"Spawned a new task to execute {action}")
+                nursery.start_soon(action.perform)
+
+        else:
+            logger.info("Rule did not evaluate to True. No actions will be executed.")
 
     def execute_rule(self, rule):
         # This function will not return anything, it would directly execute the rule
@@ -178,7 +188,7 @@ class VM:
                 sys.exit(0)
 
     @staticmethod
-    def parse_from_string(rule_script: str) -> rule.Rule:
+    def parse_from_string(rule_script: str) -> rule.Rule2:
         rule_lines = rule_script.split("\n")
 
         parsed_json = []
@@ -252,7 +262,7 @@ class VM:
         return VM.parse_from_dict(parsed_json)
 
     @staticmethod
-    def parse_from_json(json_data: str) -> rule.Rule:
+    def parse_from_json(json_data: str) -> rule.Rule2:
         try:
             parsed_json = json.loads(json_data)
             return VM.parse_from_dict(parsed_json)
@@ -260,22 +270,38 @@ class VM:
             print("Unable to decode JSON")
 
     @staticmethod
-    def parse_from_dict(rule_dict) -> rule.Rule:
-        return rule.Rule(rule_dict)
+    def parse_from_dict(rule_dict) -> rule.Rule2:
+        return rule.Rule2(
+            id="immediate",
+            name="One shot Rule",
+            description="This is a rule created using the VM APIs",
+            conditions=rule_dict,
+        )
 
     def load_rules_from_db(self):
+        from rule import Rule2
+
         rules = store.get_all_rules()
         list_of_rules = []
         for r in rules:
             doc_id = r.id
+            document = r.to_dict()
             logger.debug(f"Parsing and constructing a rule obj for {doc_id}")
             try:
-                rule_obj = VM.parse_from_dict(r.to_dict()["conditions"])
-                rule_obj.set_id(doc_id)
+                rule_obj = Rule2(
+                    id=doc_id,
+                    name=document["name"],
+                    description=document["description"],
+                    enabled=document["enabled"],
+                    conditions=document["conditions"],
+                    actions=document["actions"],
+                )
                 list_of_rules.append(rule_obj)
 
             except ValidationError as e:
-                logger.error(f"ValidationError in parsing rule document {doc_id} -> {e}")
+                logger.error(
+                    f"ValidationError in parsing rule document {doc_id} -> {e}"
+                )
 
             except SchemaError as e:
                 logger.error(f"SchemaError in parsing rule document {doc_id} -> {e}")
