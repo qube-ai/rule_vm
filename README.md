@@ -356,3 +356,29 @@ ENERGY_METER <device_id> frequency <comparison_op> <value>
 ENERGY_METER meter-1 power > 120
 ```
 If energy meter meter-1 power is more than 120, return true.
+
+## Actions
+
+Send an email
+```json
+{
+    "type": "send_email",
+    "to": ["apoorva.singh157@gmail.com", "duck@duck.com"],
+    "subject": "Test Mail",
+    "body": "You energy consumption has surpassed 150 units. To avoid getting charged extra. Use your electricity carefully."
+}
+```
+
+Change the state of a relay
+```json
+{
+    "type": "change_relay_state",
+    "device_id": "podnet-switch-1",
+    "relay_index": 0,
+    "state": 1
+}
+```
+
+## New Rule Class
+{InstructionConstant : InstructionClass}
+("AT_TIME", instructions.AtTime, )
