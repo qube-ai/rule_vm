@@ -1,16 +1,17 @@
-import queue
-import threading
-import instructions
 import json
-import time
+import queue
 import sys
+import threading
+import time
 
 import trio
-import rule
-from parse import compile as pc
-from loguru import logger
-import store
 from jsonschema import ValidationError, SchemaError
+from loguru import logger
+from parse import compile as pc
+
+import instructions
+import rule
+import store
 
 
 class VM:
@@ -188,7 +189,7 @@ class VM:
                 sys.exit(0)
 
     @staticmethod
-    def parse_from_string(rule_script: str) -> rule.Rule2:
+    def parse_from_string(rule_script: str) -> rule.Rule:
         rule_lines = rule_script.split("\n")
 
         parsed_json = []
@@ -262,7 +263,7 @@ class VM:
         return VM.parse_from_dict(parsed_json)
 
     @staticmethod
-    def parse_from_json(json_data: str) -> rule.Rule2:
+    def parse_from_json(json_data: str) -> rule.Rule:
         try:
             parsed_json = json.loads(json_data)
             return VM.parse_from_dict(parsed_json)
@@ -270,8 +271,8 @@ class VM:
             print("Unable to decode JSON")
 
     @staticmethod
-    def parse_from_dict(rule_dict) -> rule.Rule2:
-        return rule.Rule2(
+    def parse_from_dict(rule_dict) -> rule.Rule:
+        return rule.Rule(
             id="immediate",
             name="One shot Rule",
             description="This is a rule created using the VM APIs",
@@ -279,7 +280,7 @@ class VM:
         )
 
     def load_rules_from_db(self):
-        from rule import Rule2
+        from rule import Rule
 
         rules = store.get_all_rules()
         list_of_rules = []
@@ -288,7 +289,7 @@ class VM:
             document = r.to_dict()
             logger.debug(f"Parsing and constructing a rule obj for {doc_id}")
             try:
-                rule_obj = Rule2(
+                rule_obj = Rule(
                     id=doc_id,
                     name=document["name"],
                     description=document["description"],
