@@ -164,6 +164,9 @@ class VM:
 
         # Code to perform action
         if execute_action:
+            # Update rule information
+            await rule.update_execution_info()
+
             logger.info(f"Executing {len(rule.action_stream)} action(s)")
             for action in rule.action_stream:
                 logger.info(f"Spawned a new task to execute {action}")
@@ -286,6 +289,7 @@ class VM:
             conditions=rule_dict,
         )
 
+    # Deprecated - Don't use this
     def load_rules_from_db(self):
         from rule import Rule
 
@@ -344,6 +348,9 @@ class VM:
                 conditions=document["conditions"],
                 actions=document["actions"],
             )
+
+            if "execution_count" in document:
+                rule_obj.set_execution_count(document["execution_count"])
 
             return rule_obj
 

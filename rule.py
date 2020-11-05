@@ -1,3 +1,5 @@
+import datetime
+
 from loguru import logger
 
 import store
@@ -23,6 +25,8 @@ class Rule:
         enabled=True,
         conditions=[],
         actions=[],
+        last_execution=None,
+        execution_count=0,
     ):
         self.id = id
         self.name = name
@@ -30,6 +34,8 @@ class Rule:
         self.enabled = enabled
         self.conditions = conditions
         self.actions = actions
+        self.last_execution = last_execution
+        self.execution_count = execution_count
         # Devices that this rule uses for final evaluation
         self.dependent_devices = []
 
@@ -112,6 +118,27 @@ class Rule:
 
     async def get_rule_document(self):
         return await store.get_document("rules", self.id)
+
+    def set_last_execution(self, datetime):
+        self.last_execution = datetime
+
+    def set_execution_count(self, count):
+        self.execution_count = count
+
+    async def update_execution_info(self):
+        self.execution_count += 1
+        self.last_execution = datetime.datetime.now()
+        await store.update_document(
+            "rules",
+            self.id,
+            {
+                "last_executed": self.last_execution,
+                "execution_count": self.execution_count,
+            },
+        )
+        logger.debug(
+            f"Rule execution count({self.execution_count}) and last executed datetime ({self.last_execution}) updated."
+        )
 
     def __str__(self):
         return f"<Rule({len(self.instruction_stream)}): {self.id}>"
