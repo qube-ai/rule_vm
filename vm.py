@@ -56,10 +56,16 @@ class VM:
     async def task_spawner(self, nursery):
         while self.run_vm_thread:
             if not self.task_queue.empty():
-                task = self.task_queue.get_nowait()
-                nursery.start_soon(self.__executor, nursery, task)
-                logger.info(f"Spawned a new task inside the VM: {task}")
-                self.TASKS_RUNNING += 1
+                rule_obj = self.task_queue.get_nowait()
+                if rule_obj.enabled:
+                    nursery.start_soon(self.__executor, nursery, rule_obj)
+                    logger.info(f"Spawned a new task inside the VM: {rule_obj}")
+                    self.TASKS_RUNNING += 1
+
+                else:
+                    logger.info(
+                        f"{rule_obj} is currently disabled. Skipping execution."
+                    )
 
             await trio.sleep(0)
 
@@ -356,6 +362,10 @@ class VM:
         if rule_obj is not None and rule_obj not in self.LIST_OF_RULES:
             logger.debug(f"Added {rule_obj} to LIST_OF_RULES")
             self.LIST_OF_RULES.append(rule_obj)
+
+            # Just for the time being
+            self.execute_rule(rule_obj)
+
         logger.debug(
             f"Rule count before addition: {prev_rule_count} and after {len(self.LIST_OF_RULES)}"
         )
