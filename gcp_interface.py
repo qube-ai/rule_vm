@@ -7,7 +7,7 @@ from vm import VM
 
 # Start the VM and add rules from DB
 rule_vm = VM()
-rule_vm.load_rules_from_db()
+rule_vm.sync_rules()
 
 
 def door_sensor_dev_callback(message):

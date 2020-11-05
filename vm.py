@@ -324,3 +324,93 @@ class VM:
         for r in self.LIST_OF_RULES:
             if device_id in r.dependent_devices:
                 self.execute_rule(r)
+
+    def document_to_rule_obj(self, document) -> rule.Rule:
+        doc_id = document.id
+        document = document.to_dict()
+        logger.debug(f"Parsing and constructing a rule obj for {doc_id}")
+        try:
+            rule_obj = rule.Rule(
+                id=doc_id,
+                name=document["name"],
+                description=document["description"],
+                enabled=document["enabled"],
+                conditions=document["conditions"],
+                actions=document["actions"],
+            )
+
+            return rule_obj
+
+        except ValidationError as e:
+            logger.error(f"ValidationError in parsing rule document {doc_id} -> {e}")
+
+        except SchemaError as e:
+            logger.error(f"SchemaError in parsing rule document {doc_id} -> {e}")
+
+        except Exception as e:
+            logger.error(f"Some unknown error occurred. Error: {e}")
+
+    def add_rule(self, document):
+        prev_rule_count = len(self.LIST_OF_RULES)
+        rule_obj = self.document_to_rule_obj(document)
+        if rule_obj is not None and rule_obj not in self.LIST_OF_RULES:
+            logger.debug(f"Added {rule_obj} to LIST_OF_RULES")
+            self.LIST_OF_RULES.append(rule_obj)
+        logger.debug(
+            f"Rule count before addition: {prev_rule_count} and after {len(self.LIST_OF_RULES)}"
+        )
+
+    def update_rule(self, document):
+        prev_rule_count = len(self.LIST_OF_RULES)
+        rule_obj = self.document_to_rule_obj(document)
+
+        if rule_obj is not None and rule_obj in self.LIST_OF_RULES:
+            i = 0
+            while i < len(self.LIST_OF_RULES):
+                if rule_obj == self.LIST_OF_RULES[i]:
+                    self.LIST_OF_RULES[i] = rule_obj
+                    logger.debug(f"{rule_obj} was updated in LIST_OF_RULES")
+                    break
+                i += 1
+        else:
+            logger.debug(f"{rule_obj} was not found in LIST_OF_RULES. Adding it.")
+            self.LIST_OF_RULES.append(rule_obj)
+            logger.debug(
+                f"{rule_obj} was added to the list. Since it was not present during the update."
+            )
+        logger.debug(
+            f"Rule count before addition: {prev_rule_count} and after {len(self.LIST_OF_RULES)}"
+        )
+
+    def remove_rule(self, document):
+        prev_rule_count = len(self.LIST_OF_RULES)
+        rule_obj = self.document_to_rule_obj(document)
+
+        try:
+            self.LIST_OF_RULES.remove(rule_obj)
+            logger.debug(f"{rule_obj} was removed from LIST_OF_RULES")
+        except ValueError:
+            logger.debug(
+                f"{rule_obj} was not found in the LIST_OF_RULES. So nothing to remove :D"
+            )
+        logger.debug(
+            f"Rule count before addition: {prev_rule_count} and after {len(self.LIST_OF_RULES)}"
+        )
+
+    def rule_changed_callback(self, col_snapshot, changes, read_time):
+        for change in changes:
+            if change.type.name == "ADDED":
+                logger.info(f"Rule was ADDED - {change.document.id}")
+                self.add_rule(change.document)
+            elif change.type.name == "MODIFIED":
+                logger.info(f"Rule was MODIFIED - {change.document.id}")
+                self.update_rule(change.document)
+            elif change.type.name == "REMOVED":
+                logger.info(f"Rule was REMOVED - {change.document.id}")
+                self.remove_rule(change.document)
+
+    def sync_rules(self):
+        firestore = store.store
+        rules_col = firestore.collection("rules")
+        rules_col.on_snapshot(self.rule_changed_callback)
+        logger.info("Started the 'rules' collection watcher.")
