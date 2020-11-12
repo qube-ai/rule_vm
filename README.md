@@ -32,6 +32,23 @@ This image shows the overall system and what it does.
 
 ## Instruction Set and JSON representation
 
+### List of instructions
+```
+AND
+OR
+AT_TIME
+AT_TIME_WITH_OCCURENCE
+ENERGY_METER
+DW_STATE
+DW_STATE_FOR
+OCCUPANCY_STATE
+OCCUPANCY_STATE_FOR
+TEMPERATURE
+TEMPERATURE_FOR
+RELAY_STATE
+RELAY_STATE_FOR
+```
+
 ### Logical Operation
 #### Logical AND
 ```json
