@@ -92,10 +92,8 @@ class AtTimeWithOccurrence(AtTime):
         super(AtTimeWithOccurrence, self).__init__(json_data, rule)
         self.occurrence: int = self.json_data["occurrence"]
 
-    async def evaluate(self, vm_instance):
-        is_true = await super().evaluate(vm_instance)
-
-        if is_true and self.occurrence > 0:
+    async def decrement_occurrence(self):
+        if self.rule.id != "immediate":
             rule_doc = await self.rule.get_rule_document()
             rule_doc_dict = rule_doc.to_dict()
             for cond in rule_doc_dict["conditions"]:
@@ -115,6 +113,26 @@ class AtTimeWithOccurrence(AtTime):
             logger.debug(
                 f"Updated Firestore with new occurrence value: {self.occurrence}"
             )
+
+        else:
+            self.occurrence -= 1
+            logger.debug(
+                f"Decremented occurrence count for {self.rule} to {self.occurrence}"
+            )
+
+    async def evaluate(self, vm_instance):
+        # Call to super automatically evaluates the next time for evaluation
+        # To turn it off, disable periodic execution and then make the
+        # call to super class
+        self.rule.set_periodic_execution(False)
+        is_true = await super().evaluate(vm_instance)
+        self.rule.set_periodic_execution(True)
+
+        if is_true and self.occurrence > 0:
+            await self.decrement_occurrence()
+            time_to_next_eval = self.time_to_next_evaluation()
+            vm_instance.add_rule_for_future_exec(self.rule, time_to_next_eval)
+            return True
 
         return False
 

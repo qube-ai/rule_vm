@@ -1,9 +1,8 @@
 import trio
 from vm import VM
 
-
 rule_string = """
-AT_TIME 09:08:00+05:30
+AT_TIME_WITH_OCCURRENCE 09:37:00+05:30 0
 """
 
 vm = VM()
