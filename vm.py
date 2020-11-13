@@ -16,9 +16,9 @@ import store
 
 class VM:
     TASK_QUEUE_BUFFER_SIZE = 10
+    FUTURE_TASK_QUEUE_BUFFER_SIZE = 10
     LIST_OF_RULES = []
     TASKS_RUNNING = 0
-    FUTURE_TASKS = []
     FUTURE_TASK_COUNT = 0
     # Used for parsing rules in string format
     instructions_pattern = [
@@ -45,6 +45,7 @@ class VM:
     def __init__(self):
         self.run_vm_thread = True
         self.task_queue = queue.Queue(self.TASK_QUEUE_BUFFER_SIZE)
+        self.future_task_queue = queue.Queue(self.FUTURE_TASK_QUEUE_BUFFER_SIZE)
         self.vm_thread = threading.Thread(target=lambda: trio.run(self.__starter))
         self.vm_thread.start()
         logger.info("Started VM thread.")
@@ -57,6 +58,8 @@ class VM:
 
     async def task_spawner(self, nursery):
         while self.run_vm_thread:
+
+            # Look into active task_queue and run any rules if available
             if not self.task_queue.empty():
                 rule_obj = self.task_queue.get_nowait()
                 if rule_obj.enabled:
@@ -69,7 +72,30 @@ class VM:
                         f"{rule_obj} is currently disabled. Skipping execution."
                     )
 
+            # Spawn new tasks that come into future_tasks_queue
+            if not self.future_task_queue.empty():
+                rule_obj, time_to_wait = self.future_task_queue.get_nowait()
+                if rule_obj.enabled:
+                    nursery.start_soon(self.__future_executor, rule_obj, time_to_wait)
+                    logger.info(
+                        f"{rule_obj} will be added as an active task in {time_to_wait} seconds"
+                    )
+                    self.FUTURE_TASK_COUNT += 1
+                else:
+                    logger.info(
+                        f"Future task queue: {rule_obj} is currently disabled. Skipping execution."
+                    )
+
             await trio.sleep(0)
+
+    async def __future_executor(self, rule_obj, time_to_wait):
+        """Wait for `time_to_wait` seconds and then execute the rule."""
+        await trio.sleep(
+            time_to_wait + 2
+        )  # Add 2 seconds for definite execution next time
+        self.execute_rule(rule_obj)
+        logger.info(f"Added {rule_obj} back to active task queue")
+        self.FUTURE_TASK_COUNT -= 1
 
     async def __executor(self, nursery, rule):
         """Evaluates a rule using a stack."""
@@ -167,7 +193,8 @@ class VM:
         # Code to perform action
         if execute_action:
             # Update rule information
-            await rule.update_execution_info()
+            if rule.id != "immediate":
+                await rule.update_execution_info()
 
             logger.info(f"Executing {len(rule.action_stream)} action(s)")
             for action in rule.action_stream:
@@ -435,7 +462,4 @@ class VM:
         logger.info("Started the 'rules' collection watcher.")
 
     def add_rule_for_future_exec(self, rule, time_to_execution):
-        self.FUTURE_TASK_COUNT += 1
-        self.FUTURE_TASKS.append(rule)
-        logger.info(f"Added {rule} for execution after {time_to_execution} seconds")
-        # TODO Write code to actually take out the rule from the list and execute it.
+        self.future_task_queue.put((rule, time_to_execution))

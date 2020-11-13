@@ -4,6 +4,9 @@ The customer creates rules for the devices to behave in a certain
 way on the frontend. That rule is taken by the rule VM and executed
 to execute whatever action has to be executed.
 
+## Caution
+  - No rule should be named **immediate** in Firestore.
+
 ## Higher level objective
 The goal of this system is:
   - Support instructions/commands that make rules express and check powerful things
