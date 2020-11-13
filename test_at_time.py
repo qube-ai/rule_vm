@@ -3,7 +3,7 @@ from vm import VM
 
 
 rule_string = """
-AT_TIME 08:45:00+05:30
+AT_TIME 09:01:00+05:30
 """
 
 vm = VM()

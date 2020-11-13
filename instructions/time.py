@@ -34,18 +34,21 @@ class AtTime(BaseInstruction):
         # Convert this to parsed time string
         # Expected time, 09:42:32+05:30
         temp = arrow.get(self.time_string, "HH:mm:ssZZ")
-        current_time = arrow.now(temp.tzinfo)
+        self.current_time = arrow.now(temp.tzinfo)
         self.target_time = temp.shift(
-            years=current_time.year - 1,
-            months=current_time.month - 1,
-            days=current_time.day - 1,
+            years=self.current_time.year - 1,
+            months=self.current_time.month - 1,
+            days=self.current_time.day - 1,
         )
 
-        # delta = 0
+        # Add rule for future execution
+        time_to_next_invocation = self.time_to_next_evaluation()
+        vm_instance.add_rule_for_future_exec(self.rule, time_to_next_invocation)
+
         logger.debug(
-            f"Evaluating {self.instruction_type}. Current time({current_time}) and Target time({self.target_time})"
+            f"Evaluating {self.instruction_type}. Current time({self.current_time}) and Target time({self.target_time})"
         )
-        if current_time > self.target_time:
+        if self.current_time > self.target_time:
             # delta = current_time - self.target_time
             # Since we are in the same day, if current time is greater than
             # target time, we should execute the rule
@@ -55,13 +58,16 @@ class AtTime(BaseInstruction):
             # When we look at current_time and self.target_time
             # We are in the same day. So if current_time is lagging
             # behind, return false.
-
-            # Add rule for future execution
-            delta = self.target_time - current_time
-            time_to_next_invocation = delta.seconds
-            vm_instance.add_rule_for_future_exec(self.rule, time_to_next_invocation)
-
             return False
+
+    def time_to_next_evaluation(self):
+        if self.current_time > self.target_time:
+            new_target_time = self.target_time.shift(days=1)
+            delta = new_target_time - self.current_time
+            return delta.seconds
+        else:
+            delta = self.target_time - self.current_time
+            return delta.seconds
 
     def __eq__(self, other):
         return self.instruction_type == other
