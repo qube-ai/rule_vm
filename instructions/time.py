@@ -8,13 +8,6 @@ from .base import BaseInstruction
 from .base import InstructionConstant
 
 
-# TODO need to create a Rule Statistics to prevent the execution of same rule multiple times.
-#  This can happen in the case of time based instructions.
-# If multiple tasks are started, all of them will wait for the target time
-#  and then all of them will return True, which shouldn't happen.
-# Think of a mechanism to prevent this from happening.
-
-
 class AtTime(BaseInstruction):
     instruction_type = InstructionConstant.AT_TIME
     name = "AT_TIME"
@@ -35,7 +28,7 @@ class AtTime(BaseInstruction):
         self.time_string = self.json_data["time"]
         self.target_time = None
 
-    async def evaluate(self):
+    async def evaluate(self, vm_instance):
         # Find the difference between target time and current time in UTC
 
         # Convert this to parsed time string
@@ -62,11 +55,13 @@ class AtTime(BaseInstruction):
             # When we look at current_time and self.target_time
             # We are in the same day. So if current_time is lagging
             # behind, return false.
-            return False
 
-        # Sleep for that interval of time
-        # print(f"Sleeping for {delta.seconds} seconds...")
-        # await trio.sleep(delta.seconds)
+            # Add rule for future execution
+            delta = self.target_time - current_time
+            time_to_next_invocation = delta.seconds
+            vm_instance.add_rule_for_future_exec(self.rule, time_to_next_invocation)
+
+            return False
 
     def __eq__(self, other):
         return self.instruction_type == other
@@ -90,8 +85,8 @@ class AtTimeWithOccurrence(AtTime):
         super(AtTimeWithOccurrence, self).__init__(json_data, rule)
         self.occurrence: int = self.json_data["occurrence"]
 
-    async def evaluate(self):
-        is_true = await super().evaluate()
+    async def evaluate(self, vm_instance):
+        is_true = await super().evaluate(vm_instance)
 
         if is_true and self.occurrence > 0:
             rule_doc = await self.rule.get_rule_document()

@@ -16,8 +16,10 @@ import store
 
 class VM:
     TASK_QUEUE_BUFFER_SIZE = 10
-    TASKS_RUNNING = 0
     LIST_OF_RULES = []
+    TASKS_RUNNING = 0
+    FUTURE_TASKS = []
+    FUTURE_TASK_COUNT = 0
     # Used for parsing rules in string format
     instructions_pattern = [
         pc("AT_TIME {time}"),
@@ -92,7 +94,7 @@ class VM:
                 op1_value = None
                 if isinstance(op1, instructions.BaseInstruction):
                     # If it's an instruction, evaluate it
-                    op1_value = await op1.evaluate()
+                    op1_value = await op1.evaluate(self)
                 else:
                     # It's probably only a bool value
                     op1_value = op1
@@ -101,7 +103,7 @@ class VM:
                 op2_value = None
                 if isinstance(op2, instructions.BaseInstruction):
                     # If it's an instruction evaluate it
-                    op2_value = await op2.evaluate()
+                    op2_value = await op2.evaluate(self)
                 else:
                     # It's probably only a bool value
                     op2_value = op2
@@ -152,7 +154,7 @@ class VM:
         # So evaluate the instruction and simply return it's value
         if isinstance(last_item, instructions.BaseInstruction):
             logger.info("Last item in stack is an unevaluated instruction.")
-            execute_action = await last_item.evaluate()
+            execute_action = await last_item.evaluate(self)
             logger.debug(f"Evaluation of {rule} returned {execute_action}")
             self.TASKS_RUNNING -= 1
 
@@ -431,3 +433,9 @@ class VM:
         rules_col = firestore.collection("rules")
         rules_col.on_snapshot(self.rule_changed_callback)
         logger.info("Started the 'rules' collection watcher.")
+
+    def add_rule_for_future_exec(self, rule, time_to_execution):
+        self.FUTURE_TASK_COUNT += 1
+        self.FUTURE_TASKS.append(rule)
+        logger.info(f"Added {rule} for execution after {time_to_execution} seconds")
+        # TODO Write code to actually take out the rule from the list and execute it.

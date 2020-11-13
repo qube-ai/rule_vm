@@ -32,6 +32,9 @@ class BaseInstruction:
         self.rule = rule
         self.validate_data()
 
+    def evaluate(self, vm_instance):
+        pass
+
     def validate_data(self):
         # This will raise ValidationError or SchemaError,
         # both of which we'll allow to propagate upwards

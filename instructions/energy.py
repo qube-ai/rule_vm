@@ -14,13 +14,22 @@ class EnergyMeter(BaseInstruction):
         "properties": {
             "operation": {"type": "string", "enum": ["energy_meter"]},
             "device_id": {"type": "string"},
-            "variable": {"type": "string",
-                         "enum": ["voltage", "current", "real_power", "apparent_power", "power_factor", "frequency",
-                                  "energy"]},
+            "variable": {
+                "type": "string",
+                "enum": [
+                    "voltage",
+                    "current",
+                    "real_power",
+                    "apparent_power",
+                    "power_factor",
+                    "frequency",
+                    "energy",
+                ],
+            },
             "comparison_op": {"type": "string", "enum": ["=", ">", "<"]},
-            "value": {"type": "number"}
+            "value": {"type": "number"},
         },
-        "required": ["operation", "device_id", "variable", "comparison_op", "value"]
+        "required": ["operation", "device_id", "variable", "comparison_op", "value"],
     }
 
     def __init__(self, json_data: Dict, rule):
@@ -30,21 +39,24 @@ class EnergyMeter(BaseInstruction):
         self.value = self.json_data["value"]
         self.comparison_op = self.json_data["comparison_op"]
 
-    async def evaluate(self):
+    async def evaluate(self, vm_instance):
         doc = await store.get_device_document(self.device_id)
         document = doc.to_dict()
 
         if self.comparison_op == "=":
             logger.debug(
-                f"{self.rule}: Evaluating (current_{self.variable} == target_{self.value}) -> {document[self.variable]} = {self.value}")
+                f"{self.rule}: Evaluating (current_{self.variable} == target_{self.value}) -> {document[self.variable]} = {self.value}"
+            )
             return document[self.variable] == self.value
 
         elif self.comparison_op == ">":
             logger.debug(
-                f"{self.rule}: Evaluating (current_{self.variable} > target_{self.value}) -> {document[self.variable]} > {self.value}")
+                f"{self.rule}: Evaluating (current_{self.variable} > target_{self.value}) -> {document[self.variable]} > {self.value}"
+            )
             return document[self.variable] > self.value
 
         elif self.comparison_op == "<":
             logger.debug(
-                f"{self.rule}: Evaluating (current_{self.variable} < target_{self.value}) -> {document[self.variable]} < {self.value}")
+                f"{self.rule}: Evaluating (current_{self.variable} < target_{self.value}) -> {document[self.variable]} < {self.value}"
+            )
             return document[self.variable] < self.value

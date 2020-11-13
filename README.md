@@ -10,10 +10,19 @@ The goal of this system is:
   - Map instructions as close to real world sentences, making it easier to model
 
 
-## Run tests
+## Running
+
+### Tests
 ```
 $ pytest
 ```
+
+### Run it on Compute Engine
+Clone this repo, create a virtual env, install all the requirements there. And execute:
+```
+$ python gcp_interface.py
+```
+
 
 ## Diagram
 This image shows the overall system and what it does.

@@ -27,7 +27,7 @@ class IsRelayState(BaseInstruction):
         self.relay_index = self.json_data["relay_index"]
         self.target_state = self.json_data["state"]
 
-    async def evaluate(self):
+    async def evaluate(self, vm_instance):
         current_state = await self.get_current_state(self.relay_index)
         logger.debug(
             f"{self.rule}: Evaluating relay state(current_state == target_state) -> {current_state} == {self.target_state}"

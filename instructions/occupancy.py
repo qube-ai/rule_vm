@@ -30,7 +30,7 @@ class CheckOccupancy(BaseInstruction):
         self.target_state = self.json_data["state"].lower()
         self.device_id = self.json_data["device_id"]
 
-    async def evaluate(self):
+    async def evaluate(self, vm_instance):
         current_state = await self.get_current_state()
         logger.debug(
             f"Evaluating occupancy sensor (current_state == target_state) -> {current_state} == {self.target_state}"
