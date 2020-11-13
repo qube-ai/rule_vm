@@ -42,8 +42,9 @@ class AtTime(BaseInstruction):
         )
 
         # Add rule for future execution
-        time_to_next_invocation = self.time_to_next_evaluation()
-        vm_instance.add_rule_for_future_exec(self.rule, time_to_next_invocation)
+        if self.rule.periodic_execution:
+            time_to_next_invocation = self.time_to_next_evaluation()
+            vm_instance.add_rule_for_future_exec(self.rule, time_to_next_invocation)
 
         logger.debug(
             f"Evaluating {self.instruction_type}. Current time({self.current_time}) and Target time({self.target_time})"

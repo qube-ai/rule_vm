@@ -45,6 +45,7 @@ class Rule:
         self.parse_conditions()
         self.parse_actions()
         self.determine_device_dependencies()
+        self.periodic_execution = True
         logger.debug(f"{self} dependent devices -> {self.dependent_devices}")
 
     def parse_conditions(self):
@@ -124,6 +125,9 @@ class Rule:
 
     def set_execution_count(self, count):
         self.execution_count = count
+
+    def set_periodic_execution(self, value):
+        self.periodic_execution = value
 
     async def update_execution_info(self):
         self.execution_count += 1
