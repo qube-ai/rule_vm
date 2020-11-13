@@ -48,6 +48,7 @@ async def get_generated_data(device_id: str, count=5):
             store.collection("devices")
             .document(device_id)
             .collection("generatedData")
+            .order_by("creation_timestamp", direction=firestore.Query.DESCENDING)
             .limit(count)
             .get()
         )
@@ -55,9 +56,9 @@ async def get_generated_data(device_id: str, count=5):
     data = await trio.to_thread.run_sync(f)
     list_of_docs = []
     for x in data:
+        logger.debug(f"Fetched {x.id} document")
         list_of_docs.append(x.to_dict())
 
-    logger.debug(f"Fetching generated data for {device_id}")
     return list_of_docs
 
 

@@ -2,7 +2,7 @@ import trio
 from vm import VM
 
 rule_string = """
-AT_TIME_WITH_OCCURRENCE 09:37:00+05:30 0
+DW_STATE_FOR door-sensor-1 OPEN 15
 """
 
 vm = VM()
