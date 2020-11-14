@@ -2,7 +2,7 @@ import trio
 from vm import VM
 
 rule_string = """
-DW_STATE_FOR door-sensor-1 OPEN 15
+OCCUPANCY_FOR occupancy-sensor-1 OCCUPIED 2
 """
 
 vm = VM()
