@@ -29,7 +29,7 @@ class VM:
         pc("DW_STATE {device_id} {state}"),
         pc("DW_STATE_FOR {device_id} {state} {for:d}"),
         pc("OCCUPANCY_STATE {device_id} {state}"),
-        pc("OCCUPANCY_STATE_FOR {device_id} {state} {for:d}"),
+        pc("OCCUPANCY_FOR {device_id} {state} {for:d}"),
         pc("RELAY_STATE {device_id} {relay_index:d} {state}"),
         pc("RELAY_STATE_FOR {device_id} {relay_index:d} {state} {for:d}"),
         pc("TEMPERATURE {device_id} {comparison_op} {value:f}"),
@@ -236,11 +236,19 @@ class VM:
         for line in rule_lines:
             clean_line = line.strip().lower()
 
-            if clean_line.startswith("and"):
-                parsed_json.append({"operation": "logical_and"})
+            if clean_line.startswith(
+                instructions.InstructionConstant.LOGICAL_AND.value.lower()
+            ):
+                parsed_json.append(
+                    {"operation": instructions.InstructionConstant.LOGICAL_AND.value}
+                )
 
-            elif clean_line.startswith("or"):
-                parsed_json.append({"operation": "logical_or"})
+            elif clean_line.startswith(
+                instructions.InstructionConstant.LOGICAL_OR.value.lower()
+            ):
+                parsed_json.append(
+                    {"operation": instructions.InstructionConstant.LOGICAL_OR.value}
+                )
 
             else:
                 for pattern in VM.instructions_pattern:
@@ -251,46 +259,100 @@ class VM:
                         json_instruction = {**match.named}
 
                         # Check for each instruction
-                        if operation == "at_time":
-                            json_instruction["operation"] = "at_time"
+                        if (
+                            operation
+                            == instructions.InstructionConstant.AT_TIME.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.AT_TIME.value
 
-                        elif operation == "at_time_with_occurrence":
-                            json_instruction["operation"] = "at_time_with_occurrence"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.AT_TIME_WITH_OCCURRENCE.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = (
+                                instructions.InstructionConstant.AT_TIME_WITH_OCCURRENCE.value
+                            )
 
-                        elif operation == "energy_meter":
-                            json_instruction["operation"] = "energy_meter"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.ENERGY_METER.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.ENERGY_METER.value
 
-                        elif operation == "dw_state":
-                            json_instruction["operation"] = "dw_state"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.DW_STATE.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.DW_STATE.value
 
-                        elif operation == "dw_state_for":
-                            json_instruction["operation"] = "dw_state_for"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.DW_STATE_FOR.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.DW_STATE_FOR.value
 
-                        elif operation == "occupancy_state":
-                            json_instruction["operation"] = "occupancy_state"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.OCCUPANCY.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.OCCUPANCY.value
 
-                        elif operation == "occupancy_state_for":
-                            json_instruction["operation"] = "occupancy_state_for"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.OCCUPANCY_FOR.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.OCCUPANCY_FOR.value
 
-                        elif operation == "relay_state":
-                            json_instruction["operation"] = "relay_state"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.RELAY_STATE.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.RELAY_STATE.value
 
-                        elif operation == "relay_state_for":
-                            json_instruction["operation"] = "relay_state_for"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.RELAY_STATE_FOR.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.RELAY_STATE_FOR.value
 
-                        elif operation == "temperature":
-                            json_instruction["operation"] = "temperature"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.TEMPERATURE.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.TEMPERATURE.value
 
-                        elif operation == "temperature_for":
-                            json_instruction["operation"] = "temperature_for"
-
-                        elif operation == "energy_meter":
-                            json_instruction["operation"] = "energy_meter"
+                        elif (
+                            operation
+                            == instructions.InstructionConstant.TEMPERATURE_FOR.value.lower()
+                        ):
+                            json_instruction[
+                                "operation"
+                            ] = instructions.InstructionConstant.TEMPERATURE_FOR.value
 
                         else:
                             # This will probably never get executed
                             # The reason is, we'll never have a match with a string that
-                            # we don't recognize
+                            # we don't recognize.
                             print(f"Unknown operation: {operation}")
 
                         parsed_json.append(json_instruction)
