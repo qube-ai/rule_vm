@@ -133,6 +133,22 @@ class Rule:
     def set_periodic_execution(self, value):
         self.periodic_execution = value
 
+    def update_rule_uuid(self):
+        self.rule_uuid = uuid.uuid4()
+
+    def create_clone(self):
+        """Create a new copy of this object"""
+        return Rule(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            enabled=self.enabled,
+            conditions=self.conditions,
+            actions=self.actions,
+            last_execution=self.last_execution,
+            execution_count=self.execution_count,
+        )
+
     async def update_execution_info(self):
         self.execution_count += 1
         self.last_execution = datetime.datetime.now()
@@ -153,3 +169,6 @@ class Rule:
 
     def __eq__(self, other):
         return self.id == other
+
+    def __repr__(self):
+        return self.__str__()
