@@ -6,6 +6,7 @@ import store
 from actions.lut import ACTION_LUT
 from instructions import InstructionConstant
 from instructions.lut import INSTRUCTION_LUT
+import uuid
 
 
 class RuleParsingException(Exception):
@@ -28,6 +29,9 @@ class Rule:
         last_execution=None,
         execution_count=0,
     ):
+        # Generate and assign a unique ID for this rule
+        # Same rules might have different UUID's
+        self.rule_uuid = uuid.uuid4()
         self.id = id
         self.name = name
         self.description = description
@@ -145,7 +149,7 @@ class Rule:
         )
 
     def __str__(self):
-        return f"<Rule({len(self.instruction_stream)}): {self.id}>"
+        return f"<Rule({self.rule_uuid}): {self.id}>"
 
     def __eq__(self, other):
         return self.id == other
