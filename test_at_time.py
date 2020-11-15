@@ -2,7 +2,7 @@ import trio
 from vm import VM
 
 rule_string = """
-RELAY_STATE_FOR podnet-switch-1 1 0 10
+RELAY_STATE_FOR podnet-switch-1 1 1 265
 """
 
 vm = VM()

@@ -18,6 +18,7 @@ class VM:
     TASK_QUEUE_BUFFER_SIZE = 10
     FUTURE_TASK_QUEUE_BUFFER_SIZE = 10
     LIST_OF_RULES = []
+    FUTURE_TASKS_AWAITING_COMPLETION = []
     TASKS_RUNNING = 0
     FUTURE_TASK_COUNT = 0
     # Used for parsing rules in string format
@@ -95,6 +96,9 @@ class VM:
         )  # Add 2 seconds for definite execution next time
         self.execute_rule(rule_obj)
         logger.info(f"Added {rule_obj} back to active task queue")
+
+        # Once the rule is scheduled for execution, remove it from FUTURE_TASKS list
+
         self.FUTURE_TASK_COUNT -= 1
 
     async def __executor(self, nursery, rule):
@@ -203,6 +207,10 @@ class VM:
 
         else:
             logger.info("Rule did not evaluate to True. No actions will be executed.")
+
+        # One more thing...remove the task from FUTURE_TASKS_AWAITING_COMPLETION list
+        # If it belongs to that list
+        self.__remove_task_from_future_awaiting_completion(rule)
 
     def execute_rule(self, rule):
         # This function will not return anything, it would directly execute the rule
@@ -523,5 +531,31 @@ class VM:
         rules_col.on_snapshot(self.rule_changed_callback)
         logger.info("Started the 'rules' collection watcher.")
 
-    def add_rule_for_future_exec(self, rule, time_to_execution):
-        self.future_task_queue.put((rule, time_to_execution))
+    def add_rule_for_future_exec(self, rule_obj, time_to_execution):
+        # Update rule_uuid to make sure the parent rule that added itself to FUTURE_TASKS_AWAITING_COMPLETION list
+        # doesn't remove itself on finishing it's execution. So the parent's rule UUID and child's rule UUID
+        # should be different. Hence we need to create a new rule_object clone.
+        new_rule_obj = rule_obj.create_clone()
+        self.FUTURE_TASKS_AWAITING_COMPLETION.append(new_rule_obj)
+        self.future_task_queue.put((new_rule_obj, time_to_execution))
+
+    def __remove_task_from_future_awaiting_completion(self, rule_obj):
+        logger.debug(f"Looking for {rule_obj} in FUTURE_TASKS_AWAITING_COMPLETION")
+        i = 0
+        found = False
+        for r in self.FUTURE_TASKS_AWAITING_COMPLETION:
+            if r.rule_uuid == rule_obj.rule_uuid:
+                logger.debug(
+                    f"Rule found at index {i} in FUTURE_TASKS_AWAITING_COMPLETION"
+                )
+                found = True
+                break
+            i += 1
+
+        if found:
+            self.FUTURE_TASKS_AWAITING_COMPLETION.pop(i)
+            logger.debug(f"Removed {rule_obj} from list of awaiting completion tasks.")
+        else:
+            logger.debug(
+                f"{rule_obj} was not found in FUTURE_TASKS_AWAITING_COMPLETION."
+            )
