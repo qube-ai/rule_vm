@@ -2,7 +2,7 @@ import trio
 from vm import VM
 
 rule_string = """
-OCCUPANCY_FOR occupancy-sensor-1 OCCUPIED 2
+RELAY_STATE_FOR podnet-switch-1 1 0 10
 """
 
 vm = VM()
