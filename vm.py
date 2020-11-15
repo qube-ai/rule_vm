@@ -3,6 +3,8 @@ import queue
 import sys
 import threading
 import time
+import pickle
+import os
 
 import trio
 from jsonschema import ValidationError, SchemaError
@@ -43,19 +45,70 @@ class VM:
         pc("ENERGY_METER {device_id} FREQUENCY {comparison_op} {value:f}"),
     ]
 
-    def __init__(self):
+    def __init__(self, load_rules_from_disk=True):
         self.run_vm_thread = True
+        self.load_rules_from_disk = load_rules_from_disk
+        self.last_serialized_rules = []  # To prevent useless writing to disk
         self.task_queue = queue.Queue(self.TASK_QUEUE_BUFFER_SIZE)
         self.future_task_queue = queue.Queue(self.FUTURE_TASK_QUEUE_BUFFER_SIZE)
+
+        if self.load_rules_from_disk:
+            self.load_future_rules_from_disk_to_queue()
+
         self.vm_thread = threading.Thread(target=lambda: trio.run(self.__starter))
         self.vm_thread.start()
         logger.info("Started VM thread.")
+        self.FUTURE_TASK_LIST_FILE_HANDLER = open(
+            "future_task_list.pickle", "wb", buffering=0
+        )
+
+    def load_future_rules_from_disk_to_queue(self):
+        if os.path.exists("future_task_list.pickle"):
+
+            f = open("future_task_list.pickle", "rb")
+            try:
+                self.last_serialized_rules = pickle.load(f)
+                for rule in self.last_serialized_rules:
+                    logger.debug(f"Retrieved rule from disk ->  {rule}")
+                    self.task_queue.put(rule)
+
+            except EOFError:
+                logger.error("EOFError. future_task_list.pickle file is empty.")
+
+            f.close()
+        else:
+            logger.error("future_task_list.pickle file not found on disk.")
 
     async def __starter(self):
         async with trio.open_nursery() as nursery:
             nursery.start_soon(self.task_spawner, nursery)
-            # Started anything else required for the VM
             logger.info("Started task spawner.")
+
+            nursery.start_soon(self.future_task_serializer)
+            logger.info("Started future task serializer.")
+
+    async def future_task_serializer(self):
+        while self.run_vm_thread:
+            # Every 5 seconds serialize the contents of FUTURE_TASKS_AWAITING_COMPLETION list
+            await trio.sleep(5)
+            logger.info("Starting FUTURE_TASKS serialization")
+
+            def f():
+                pickle.dump(
+                    self.FUTURE_TASKS_AWAITING_COMPLETION,
+                    self.FUTURE_TASK_LIST_FILE_HANDLER,
+                )
+                self.last_serialized_rules = self.FUTURE_TASKS_AWAITING_COMPLETION
+                self.FUTURE_TASK_LIST_FILE_HANDLER.flush()
+
+            if self.last_serialized_rules != self.FUTURE_TASKS_AWAITING_COMPLETION:
+                logger.info(
+                    f"{len(self.FUTURE_TASKS_AWAITING_COMPLETION)} rules are being serialized to disk."
+                )
+                await trio.to_thread.run_sync(f)
+
+            else:
+                logger.info("No rules have changed. Nothing to serialize.")
 
     async def task_spawner(self, nursery):
         while self.run_vm_thread:
