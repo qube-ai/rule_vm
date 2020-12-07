@@ -152,7 +152,7 @@ def switch_device_callback(message):
         logger.error("Unable to decode JSON")
         return
 
-    conditions = ["relay_state" in data_packet, "temperature_sensor" in data_packet]
+    conditions = ["relay_states" in data_packet]
 
     if all(conditions):
 
@@ -165,7 +165,8 @@ def switch_device_callback(message):
             "datetime": message.publish_time,
             # Unpacking data from the original packet
             "relay_state": data_packet["relay_state"],
-            "temperature_sensor": data_packet["temperature_sensor"],
+            # Currently we don't have temperature sensors on device
+            # "temperature_sensor": data_packet["temperature_sensor"],
         }
 
         # Log the prepared packet
