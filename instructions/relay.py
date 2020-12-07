@@ -5,7 +5,6 @@ import store
 from typing import Dict
 import pytz
 import datetime
-import arrow
 
 
 class IsRelayState(BaseInstruction):
@@ -27,7 +26,7 @@ class IsRelayState(BaseInstruction):
     def __init__(self, json_data: Dict, rule):
         super(IsRelayState, self).__init__(json_data, rule)
         self.device_id = self.json_data["device_id"]
-        self.relay_index = self.json_data["relay_index"]
+        self.relay_index = int(self.json_data["relay_index"])
         self.target_state = self.json_data["state"]
 
     async def evaluate(self, vm_instance):
@@ -74,7 +73,7 @@ class IsRelayStateFor(BaseInstruction):
         super(IsRelayStateFor, self).__init__(json_data, rule)
         self.target_state = json_data["state"]
         self.device_id = json_data["device_id"]
-        self.relay_index = json_data["relay_index"]
+        self.relay_index = int(json_data["relay_index"])
         self.target_state_for = json_data["for"]
 
     async def evaluate(self, vm_instance):
@@ -109,7 +108,9 @@ class IsRelayStateFor(BaseInstruction):
 
         # Check whether the latest document has the given state for the relay index
         parsed_latest_document = latest_document[0]
-        relay_key = f"relay{self.relay_index}"
+
+        # Index for the relays are like `relay1`, `relay2`, `relay3` and `relay3`
+        relay_key = f"relay{self.relay_index + 1}"
         current_state = parsed_latest_document[relay_key]
 
         # If the current_state and target_state match only then go ahead and calculate the time
