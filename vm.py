@@ -91,7 +91,7 @@ class VM:
         while self.run_vm_thread:
             # Every 5 seconds serialize the contents of FUTURE_TASKS_AWAITING_COMPLETION list
             await trio.sleep(5)
-            logger.info("Starting FUTURE_TASKS serialization")
+            # logger.info("Starting FUTURE_TASKS serialization")
 
             def f():
                 pickle.dump(
@@ -108,7 +108,8 @@ class VM:
                 await trio.to_thread.run_sync(f)
 
             else:
-                logger.info("No rules have changed. Nothing to serialize.")
+                pass
+                # logger.info("No rules have changed. Nothing to serialize.")
 
     async def task_spawner(self, nursery):
         while self.run_vm_thread:
