@@ -15,7 +15,7 @@ class IsRelayState(BaseInstruction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "operation": {"type": "string"},
+            "operation": {"type": "string", "enum": ["relay_state"]},
             "device_id": {"type": "string"},
             "relay_index": {"type": "integer", "maximum": 64, "minimum": 0},
             "state": {"type": "integer", "minimum": 0, "maximum": 1},
@@ -59,7 +59,7 @@ class IsRelayStateFor(BaseInstruction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "operation": {"type": "string"},
+            "operation": {"type": "string", "enum": ["relay_state_for"]},
             "device_id": {"type": "string"},
             "relay_index": {"type": "integer", "maximum": 64, "minimum": 0},
             "state": {"type": "integer", "minimum": 0, "maximum": 1},

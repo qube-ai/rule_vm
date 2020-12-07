@@ -17,7 +17,7 @@ class SendEmailAction(BaseAction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "type": {"type": "string"},
+            "type": {"type": "string", "enum": ["send_email"]},
             "subject": {"type": "string"},
             "body": {"type": "string"},
             "to": {"type": "array"},

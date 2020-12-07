@@ -17,7 +17,7 @@ class DoorWindowState(BaseInstruction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "operation": {"type": "string"},
+            "operation": {"type": "string", "enum": ["dw_state"]},
             "device_id": {"type": "string"},
             "state": {"type": "string", "enum": ["open", "close"]},
         },
@@ -57,7 +57,7 @@ class DoorWindowStateFor(BaseInstruction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "operation": {"type": "string"},
+            "operation": {"type": "string", "enum": ["dw_state_for"]},
             "device_id": {"type": "string"},
             "state": {"type": "string", "enum": ["open", "close"]},
             "for": {"type": "integer", "exclusiveMinimum": 0},

@@ -21,7 +21,7 @@ class CheckOccupancy(BaseInstruction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "operation": {"type": "string"},
+            "operation": {"type": "string", "enum": ["occupancy"]},
             "device_id": {"type": "string"},
             "state": {"type": "string", "enum": ["occupied", "unoccupied"]},
         },
@@ -73,7 +73,7 @@ class CheckOccupancyFor(BaseInstruction):
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
         "properties": {
-            "operation": {"type": "string"},
+            "operation": {"type": "string", "enum": ["occupancy_for"]},
             "device_id": {"type": "string"},
             "state": {"type": "string", "enum": ["occupied", "unoccupied"]},
             "for": {"type": "integer", "exclusiveMinimum": 0},
