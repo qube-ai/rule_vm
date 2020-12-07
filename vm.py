@@ -481,12 +481,29 @@ class VM:
         for r in self.LIST_OF_RULES:
             self.execute_rule(r)
 
-    def execute_all_dependent_rules(self, device_id):
-        logger.info(f"Looking for all rules depending on {device_id}")
+    def rule_in_future_task_list(self, rule: rule.Rule):
+        for rule_obj in self.FUTURE_TASKS_AWAITING_COMPLETION:
+            if rule == rule_obj:
+                # We found an rule objects with same ID
+                return True
 
+        # We haven't found shit, return false
+        return False
+
+    def execute_all_dependent_rules(self, device_id):
         for r in self.LIST_OF_RULES:
             if device_id in r.dependent_devices:
-                self.execute_rule(r)
+                # Rule should not be scheduled for execution in FUTURE_TASKS
+                if not self.rule_in_future_task_list(r):
+                    self.execute_rule(r)
+                    logger.info(
+                        f"{r} scheduled for execution because new data arrived from {device_id}"
+                    )
+
+                else:
+                    logger.info(
+                        f"{r} already scheduled for execution in FUTURE_TASK_QUEUE"
+                    )
 
     def document_to_rule_obj(self, document) -> rule.Rule:
         doc_id = document.id
