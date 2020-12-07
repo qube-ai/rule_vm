@@ -211,7 +211,7 @@ occupancy_future = subscriber.subscribe(
 logger.info(f"Listening for messages on {occupancy_sub}...")
 
 # Podnet Switch subscription
-switch_sub = subscriber.subscription_path(project_id, "podnet-switch-data-sub")
+switch_sub = subscriber.subscription_path(project_id, "switch-pod-state-sub")
 switch_future = subscriber.subscribe(
     switch_sub, callback=switch_device_callback, flow_control=flow_control
 )
