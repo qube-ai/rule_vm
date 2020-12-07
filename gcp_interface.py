@@ -142,47 +142,24 @@ def occupancy_dev_callback(message):
         logger.debug(f"Packet with incorrect keys -> {data_packet}")
 
 
-def switch_device_callback(message):
+def switch_pod_callback(message):
     # Parse the incoming message
+    device_id = message.attributes["deviceId"]
+
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"raw message -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
-        logger.error("Unable to decode JSON")
+        logger.error(f"Unable to decode incoming device data from {device_id} in JSON")
         return
 
-    conditions = ["relay_states" in data_packet]
+    logger.debug(f"Incoming message from {device_id} -> {data_packet}")
 
-    if all(conditions):
+    # Execute all rules that depend on the state of given device_id
+    rule_vm.execute_all_dependent_rules(device_id)
 
-        # Parsed data packet
-        parsed_packet = {
-            # General information about the message
-            "message_id": message.message_id,
-            "deviceId": message.attributes["deviceId"],
-            "deviceNumId": message.attributes["deviceNumId"],
-            "datetime": message.publish_time,
-            # Unpacking data from the original packet
-            "relay_state": data_packet["relay_states"],
-            # Currently we don't have temperature sensors on device
-            # "temperature_sensor": data_packet["temperature_sensor"],
-        }
-
-        # Log the prepared packet
-        logger.debug(f"Parsed door sensor device packet -> {parsed_packet}")
-
-        # Execute all rules that depend on the state of given device_id
-        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
-
-        # Acknowledge Cloud PubSub message
-        message.ack()
-
-    else:
-        logger.error(
-            "Some keys were not found in the incoming packet. Discarding message."
-        )
-        logger.debug(f"Packet with incorrect keys -> {data_packet}")
+    # Acknowledge Cloud PubSub message
+    message.ack()
 
 
 project_id = "podnet-switch"
@@ -214,7 +191,7 @@ logger.info(f"Listening for messages on {occupancy_sub}...")
 # Podnet Switch subscription
 switch_sub = subscriber.subscription_path(project_id, "switch-pod-state-sub")
 switch_future = subscriber.subscribe(
-    switch_sub, callback=switch_device_callback, flow_control=flow_control
+    switch_sub, callback=switch_pod_callback, flow_control=flow_control
 )
 logger.info(f"Listening for messages on {switch_sub}...")
 
