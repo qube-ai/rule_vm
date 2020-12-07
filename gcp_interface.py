@@ -164,7 +164,7 @@ def switch_device_callback(message):
             "deviceNumId": message.attributes["deviceNumId"],
             "datetime": message.publish_time,
             # Unpacking data from the original packet
-            "relay_state": data_packet["relay_state"],
+            "relay_state": data_packet["relay_states"],
             # Currently we don't have temperature sensors on device
             # "temperature_sensor": data_packet["temperature_sensor"],
         }
