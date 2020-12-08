@@ -52,7 +52,7 @@ class IsRelayStateFor(BaseInstruction):
 
     instruction_type = InstructionConstant.RELAY_STATE_FOR
     SWITCH_STATE_UPDATE_INTERVAL = (
-        5 * 60
+        1 * 60
     )  # How often the device will send state values to server
     name = "RELAY_STATE_FOR"
     schema = {
