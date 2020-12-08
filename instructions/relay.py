@@ -158,6 +158,9 @@ class IsRelayStateFor(BaseInstruction):
                     if doc_data[relay_key] == self.target_state:
                         required_state_earliest_dt = doc_data["creation_timestamp"]
                         # Compute the current time diff and see if it exceeds target_state_for time
+                        current_dt = datetime.datetime.now(
+                            pytz.timezone("UTC")
+                        )  # Update the current_dt variable again as sometimes the difference becomes negative in VM Logs
                         diff = (current_dt - required_state_earliest_dt).total_seconds()
                         logger.debug(
                             f"Current time difference is {diff/60:.2f} and required is {self.target_state_for}"
