@@ -137,7 +137,7 @@ class IsRelayStateFor(BaseInstruction):
                 )
                 max_documents_to_fetch = int(
                     (self.target_state_for / (self.SWITCH_STATE_UPDATE_INTERVAL / 60))
-                    + 1
+                    + 3  # fetching 3 extra documents for buffer
                 )
                 logger.debug(f"We'll fetch at max {max_documents_to_fetch} documents.")
                 generated_data = (
