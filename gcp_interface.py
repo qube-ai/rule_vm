@@ -175,14 +175,14 @@ door_window_future = subscriber.subscribe(
 logger.info(f"Listening for messages on {door_window_sub}...")
 
 # Energy Meter subscription
-energy_meter_sub = subscriber.subscription_path(project_id, "energy-meter-data-sub")
+energy_meter_sub = subscriber.subscription_path(project_id, "surge-pod-state-sub")
 energy_meter_future = subscriber.subscribe(
     energy_meter_sub, callback=energy_meter_dev_callback, flow_control=flow_control
 )
 logger.info(f"Listening for messages on {energy_meter_sub}...")
 
 # Occupancy Sensor subscription
-occupancy_sub = subscriber.subscription_path(project_id, "occupancy-data-sub")
+occupancy_sub = subscriber.subscription_path(project_id, "sense-pod-state-sub")
 occupancy_future = subscriber.subscribe(
     occupancy_sub, callback=occupancy_dev_callback, flow_control=flow_control
 )
