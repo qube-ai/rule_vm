@@ -11,149 +11,80 @@ rule_vm.sync_rules()
 
 
 def door_sensor_dev_callback(message):
-    # Parse the incoming message
+    device_id = message.attributes["deviceId"]
+
+    # Parse the incoming message, if the message is parsable
+    # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"raw message -> {raw_string}")
+        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
-        logger.error("Unable to decode JSON")
+        logger.error(f"Unable to decode JSON message from {device_id}")
         return
 
-    conditions = ["state" in data_packet]
+    device_id = message.attributes["deviceId"]
 
-    if all(conditions):
-        # Parsed data packet
-        parsed_packet = {
-            # General information about the message
-            "message_id": message.message_id,
-            "deviceId": message.attributes["deviceId"],
-            "deviceNumId": message.attributes["deviceNumId"],
-            "datetime": message.publish_time,
-            # Unpacking data from the original packet
-            "state": data_packet["state"],
-        }
+    # Execute all rules that depend on the state of given device_id
+    rule_vm.execute_all_dependent_rules(device_id)
 
-        # Log the prepared packet
-        logger.debug(f"Parsed door sensor device packet -> {parsed_packet}")
-
-        # Execute all rules that depend on the state of given device_id
-        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
-
-        # Acknowledge Cloud PubSub message
-        message.ack()
-
-    else:
-        logger.error(
-            "Some keys were not found in the incoming packet. Discarding message."
-        )
-        logger.debug(f"Packet with incorrect keys -> {data_packet}")
+    # Acknowledge Cloud PubSub message
+    message.ack()
 
 
 def energy_meter_dev_callback(message):
-    # Parse the incoming message
+    device_id = message.attributes["deviceId"]
+
+    # Parse the incoming message, if the message is parsable
+    # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"raw message -> {raw_string}")
+        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
 
     except json.JSONDecodeError:
-        logger.error("Unable to decode JSON")
+        logger.error(f"Unable to decode JSON message from {device_id}")
         return
 
-    conditions = [
-        "voltage" in data_packet,
-        "current" in data_packet,
-        "frequency" in data_packet,
-        "pf" in data_packet,
-        "power" in data_packet,
-        "energy" in data_packet,
-    ]
+    # Execute all rules that depend on the state of given device_id
+    rule_vm.execute_all_dependent_rules(device_id)
 
-    if all(conditions):
-
-        # Parsed data packet
-        parsed_packet = {
-            # General information about the message
-            "message_id": message.message_id,
-            "deviceId": message.attributes["deviceId"],
-            "deviceNumId": message.attributes["deviceNumId"],
-            "datetime": message.publish_time,
-            # Unpacking data from the original packet
-            "voltage": data_packet["voltage"],
-            "current": data_packet["current"],
-            "frequency": data_packet["frequency"],
-            "pf": data_packet["pf"],
-            "power": data_packet["power"],
-            "energy": data_packet["energy"],
-        }
-
-        # Log the prepared packet
-        logger.debug(f"Parsed energy meter device packet -> {parsed_packet}")
-
-        # Execute all rules that depend on the state of given device_id
-        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
-
-        # Acknowledge Cloud PubSub message
-        message.ack()
-
-    else:
-        logger.error(
-            "Some keys were not found in the incoming packet. Discarding message."
-        )
-        logger.debug(f"Packet with incorrect keys -> {data_packet}")
+    # Acknowledge Cloud PubSub message
+    message.ack()
 
 
 def occupancy_dev_callback(message):
-    # Parse the incoming message
+    device_id = message.attributes["deviceId"]
+
+    # Parse the incoming message, if the message is parsable
+    # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"raw message -> {raw_string}")
+        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
-        logger.error("Unable to decode JSON")
+        logger.error(f"Unable to decode JSON message from {device_id}")
         return
 
-    conditions = [True]
+    # Execute all rules that depend on the state of given device_id
+    rule_vm.execute_all_dependent_rules(device_id)
 
-    if all(conditions):
-        # Parsed data packet
-        parsed_packet = {
-            # General information about the message
-            "message_id": message.message_id,
-            "deviceId": message.attributes["deviceId"],
-            "deviceNumId": message.attributes["deviceNumId"],
-            "datetime": message.publish_time,
-        }
-
-        # Log the prepared packet
-        logger.debug(f"Parsed door sensor device packet -> {parsed_packet}")
-
-        # Execute all rules that depend on the state of given device_id
-        rule_vm.execute_all_dependent_rules(parsed_packet["deviceId"])
-
-        # Acknowledge Cloud PubSub message
-        message.ack()
-
-    else:
-        logger.error(
-            "Some keys were not found in the incoming packet. Discarding message."
-        )
-        logger.debug(f"Packet with incorrect keys -> {data_packet}")
+    # Acknowledge Cloud PubSub message
+    message.ack()
 
 
 def switch_pod_callback(message):
-    # Parse the incoming message
+    # Parse the incoming message, if the message is parsable
+    # only then run dependent device rules.
     device_id = message.attributes["deviceId"]
 
     try:
         raw_string = message.data.decode("utf-8")
+        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
-        logger.error(f"Unable to decode incoming device data from {device_id} in JSON")
+        logger.error(f"Unable to decode JSON message from {device_id}")
         return
-
-    logger.debug(f"Incoming message from {device_id} -> {data_packet}")
 
     # Execute all rules that depend on the state of given device_id
     rule_vm.execute_all_dependent_rules(device_id)
