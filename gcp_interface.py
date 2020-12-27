@@ -10,7 +10,7 @@ rule_vm = VM()
 rule_vm.sync_rules()
 
 
-def door_sensor_dev_callback(message):
+def slide_pod_callback(message):
     device_id = message.attributes["deviceId"]
 
     # Parse the incoming message, if the message is parsable
@@ -32,7 +32,7 @@ def door_sensor_dev_callback(message):
     message.ack()
 
 
-def energy_meter_dev_callback(message):
+def surge_pod_1p_callback(message):
     device_id = message.attributes["deviceId"]
 
     # Parse the incoming message, if the message is parsable
@@ -53,7 +53,28 @@ def energy_meter_dev_callback(message):
     message.ack()
 
 
-def occupancy_dev_callback(message):
+def surge_pod_3p_callback(message):
+    device_id = message.attributes["deviceId"]
+
+    # Parse the incoming message, if the message is parsable
+    # only then run dependent device rules.
+    try:
+        raw_string = message.data.decode("utf-8")
+        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        data_packet = json.loads(raw_string)
+
+    except json.JSONDecodeError:
+        logger.error(f"Unable to decode JSON message from {device_id}")
+        return
+
+    # Execute all rules that depend on the state of given device_id
+    rule_vm.execute_all_dependent_rules(device_id)
+
+    # Acknowledge Cloud PubSub message
+    message.ack()
+
+
+def sense_pod_callback(message):
     device_id = message.attributes["deviceId"]
 
     # Parse the incoming message, if the message is parsable
@@ -73,7 +94,27 @@ def occupancy_dev_callback(message):
     message.ack()
 
 
-def switch_pod_callback(message):
+def switch_pod_1chpm_callback(message):
+    # Parse the incoming message, if the message is parsable
+    # only then run dependent device rules.
+    device_id = message.attributes["deviceId"]
+
+    try:
+        raw_string = message.data.decode("utf-8")
+        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        data_packet = json.loads(raw_string)
+    except json.JSONDecodeError:
+        logger.error(f"Unable to decode JSON message from {device_id}")
+        return
+
+    # Execute all rules that depend on the state of given device_id
+    rule_vm.execute_all_dependent_rules(device_id)
+
+    # Acknowledge Cloud PubSub message
+    message.ack()
+
+
+def switch_pod_4ch_callback(message):
     # Parse the incoming message, if the message is parsable
     # only then run dependent device rules.
     device_id = message.attributes["deviceId"]
@@ -98,41 +139,63 @@ project_id = "podnet-switch"
 subscriber = pubsub_v1.SubscriberClient()
 flow_control = pubsub_v1.types.FlowControl(max_messages=10)
 
-# Door-Window Sensor subscription
-door_window_sub = subscriber.subscription_path(project_id, "door-sensor-data-sub")
-door_window_future = subscriber.subscribe(
-    door_window_sub, callback=door_sensor_dev_callback, flow_control=flow_control
+# Slide Pod subscription
+slide_pod_sub = subscriber.subscription_path(project_id, "slide-pod-state-sub")
+slide_pod_future = subscriber.subscribe(
+    slide_pod_sub, callback=slide_pod_callback, flow_control=flow_control
 )
-logger.info(f"Listening for messages on {door_window_sub}...")
+logger.info(f"Listening for messages on {slide_pod_sub}...")
 
-# Energy Meter subscription
-energy_meter_sub = subscriber.subscription_path(project_id, "surge-pod-state-sub")
-energy_meter_future = subscriber.subscribe(
-    energy_meter_sub, callback=energy_meter_dev_callback, flow_control=flow_control
+# Surge Pod 1 Phase subscription
+surge_pod_1p_sub = subscriber.subscription_path(project_id, "surge-pod-1p-state-sub")
+surge_pod_1p_future = subscriber.subscribe(
+    surge_pod_1p_sub, callback=surge_pod_1p_callback, flow_control=flow_control
 )
-logger.info(f"Listening for messages on {energy_meter_sub}...")
+logger.info(f"Listening for messages on {surge_pod_1p_sub}...")
 
-# Occupancy Sensor subscription
-occupancy_sub = subscriber.subscription_path(project_id, "sense-pod-state-sub")
-occupancy_future = subscriber.subscribe(
-    occupancy_sub, callback=occupancy_dev_callback, flow_control=flow_control
+# Surge Pod 3 Phase subscription
+surge_pod_3p_sub = subscriber.subscription_path(project_id, "surge-pod-3p-state-sub")
+surge_pod_3p_future = subscriber.subscribe(
+    surge_pod_3p_sub, callback=surge_pod_3p_callback, flow_control=flow_control
 )
-logger.info(f"Listening for messages on {occupancy_sub}...")
+logger.info(f"Listening for messages on {surge_pod_3p_sub}...")
 
-# Podnet Switch subscription
-switch_sub = subscriber.subscription_path(project_id, "switch-pod-state-sub")
-switch_future = subscriber.subscribe(
-    switch_sub, callback=switch_pod_callback, flow_control=flow_control
+
+# Sense Pod subscription
+sense_pod_sub = subscriber.subscription_path(project_id, "sense-pod-state-sub")
+sense_pod_future = subscriber.subscribe(
+    sense_pod_sub, callback=sense_pod_callback, flow_control=flow_control
 )
-logger.info(f"Listening for messages on {switch_sub}...")
+logger.info(f"Listening for messages on {sense_pod_sub}...")
+
+# Switch Pod 1 Channel with PM subscription
+switch_pod_1chpm_sub = subscriber.subscription_path(
+    project_id, "switch-pod-1chpm-state-sub"
+)
+switch_pod_1chpm_future = subscriber.subscribe(
+    switch_pod_1chpm_sub, callback=switch_pod_1chpm_callback, flow_control=flow_control
+)
+logger.info(f"Listening for messages on {switch_pod_1chpm_sub}...")
+
+# Switch Pod 4 Channel subscription
+switch_pod_4ch_sub = subscriber.subscription_path(
+    project_id, "switch-pod-4ch-state-sub"
+)
+switch_pod_4ch_future = subscriber.subscribe(
+    switch_pod_4ch_sub, callback=switch_pod_4ch_callback, flow_control=flow_control
+)
+logger.info(f"Listening for messages on {switch_pod_4ch_sub}...")
+
 
 # Section responsible for pulling messages from PubSub
 with subscriber:
     try:
-        door_window_future.result()
-        energy_meter_future.result()
-        occupancy_future.result()
-        switch_future.result()
+        slide_pod_future.result()
+        surge_pod_1p_future.result()
+        surge_pod_3p_future.result()
+        sense_pod_future.result()
+        switch_pod_1chpm_future.result()
+        switch_pod_4ch_future.result()
 
     except TimeoutError as e:
         logger.error(f"Request timed out. Error: {e}")
@@ -141,7 +204,9 @@ with subscriber:
         logger.error(
             f"Some error happened in the underlying execution. PubSub Callback Error: {ex}"
         )
-        door_window_future.cancel()
-        energy_meter_future.cancel()
-        occupancy_future.cancel()
-        switch_future.cancel()
+        slide_pod_future.cancel()
+        surge_pod_1p_future.cancel()
+        surge_pod_3p_future.cancel()
+        sense_pod_future.cancel()
+        switch_pod_1chpm_future.cancel()
+        switch_pod_4ch_future.cancel()
