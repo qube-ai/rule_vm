@@ -111,6 +111,10 @@ class IsRelayStateFor(BaseInstruction):
 
         # Index for the relays are like `relay1`, `relay2`, `relay3` and `relay3`
         relay_key = f"relay{self.relay_index + 1}"
+
+        # 1chpm device does not have mutiple relays 
+        if (self.device_id.startswith("switch-pod-1chpm-")):
+            relay_key = f"relay_status"
         current_state = parsed_latest_document[relay_key]
 
         # If the current_state and target_state match only then go ahead and calculate the time
