@@ -150,8 +150,10 @@ class Rule:
         )
 
     async def update_execution_info(self):
+        import pytz
+        india_tz = pytz.timezone('Asia/Kolkata')
         self.execution_count += 1
-        self.last_execution = datetime.datetime.now()
+        self.last_execution = datetime.datetime.now(india_tz)
         await store.update_document(
             "rules",
             self.id,
