@@ -125,16 +125,23 @@ class AtTimeWithOccurrence(AtTime):
         # To turn it off, disable periodic execution and then make the
         # call to super class
         self.rule.set_periodic_execution(False)
-        is_true = await super().evaluate(vm_instance)
+        # gives true or false if it is the time to execute
+        current_exec_eval = await super().evaluate(vm_instance)
         self.rule.set_periodic_execution(True)
 
-        if is_true and self.occurrence > 0:
-            await self.decrement_occurrence()
-            time_to_next_eval = self.time_to_next_evaluation()
-            vm_instance.add_rule_for_future_exec(self.rule, time_to_next_eval)
-            return True
+        # Scheduling the rule to be evaluated in future
+        time_to_next_eval = self.time_to_next_evaluation()
+        vm_instance.add_rule_for_future_exec(self.rule, time_to_next_eval)
 
-        return False
+        rule_doc = await self.rule.get_rule_document()
+        rule_doc_dict = rule_doc.to_dict()
+
+
+        if current_exec_eval and self.occurrence > 0:
+            await self.decrement_occurrence()
+            return True
+        else:
+            return False
 
     def __eq__(self, other):
         return self.instruction_type == other
