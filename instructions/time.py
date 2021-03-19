@@ -133,9 +133,6 @@ class AtTimeWithOccurrence(AtTime):
         time_to_next_eval = self.time_to_next_evaluation()
         vm_instance.add_rule_for_future_exec(self.rule, time_to_next_eval)
 
-        rule_doc = await self.rule.get_rule_document()
-        rule_doc_dict = rule_doc.to_dict()
-
 
         if current_exec_eval and self.occurrence > 0:
             await self.decrement_occurrence()
