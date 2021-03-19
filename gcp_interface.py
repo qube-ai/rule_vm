@@ -17,7 +17,7 @@ def slide_pod_callback(message):
     # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        # logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
         logger.error(f"Unable to decode JSON message from {device_id}")
@@ -39,7 +39,7 @@ def surge_pod_1p_callback(message):
     # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        # logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
 
     except json.JSONDecodeError:
@@ -60,7 +60,7 @@ def surge_pod_3p_callback(message):
     # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        # logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
 
     except json.JSONDecodeError:
@@ -81,7 +81,7 @@ def sense_pod_callback(message):
     # only then run dependent device rules.
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        # logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
         logger.error(f"Unable to decode JSON message from {device_id}")
@@ -101,7 +101,7 @@ def switch_pod_1chpm_callback(message):
 
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        # logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
         logger.error(f"Unable to decode JSON message from {device_id}")
@@ -121,7 +121,7 @@ def switch_pod_4ch_callback(message):
 
     try:
         raw_string = message.data.decode("utf-8")
-        logger.debug(f"Raw Message from {device_id} -> {raw_string}")
+        # logger.debug(f"Raw Message from {device_id} -> {raw_string}")
         data_packet = json.loads(raw_string)
     except json.JSONDecodeError:
         logger.error(f"Unable to decode JSON message from {device_id}")
