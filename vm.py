@@ -5,6 +5,8 @@ import threading
 import time
 import pickle
 import os
+import redis
+import aioredis
 
 import trio
 from jsonschema import ValidationError, SchemaError
@@ -86,6 +88,35 @@ class VM:
 
             nursery.start_soon(self.future_task_serializer)
             logger.info("Started future task serializer.")
+
+            nursery.start_soon(self.update_interface)
+            logger.info("Started update interface.")
+
+    async def update_interface(self):
+        #     Open redis interface
+
+        # redis = await aioredis.create_redis_pool(('localhost', 6379))
+        r = redis.Redis(host='localhost', port=6379, db=0)
+        while self.run_vm_thread:
+            # Your code goes here
+
+            tmp_rule_list = list(map(lambda x: str(x), self.LIST_OF_RULES))
+            r.set("list_of_rules", json.dumps(tmp_rule_list))
+
+            future_task_awaiting = list(map(lambda x: str(x), self.FUTURE_TASKS_AWAITING_COMPLETION))
+            r.set("future_task_awaiting", json.dumps(future_task_awaiting))
+
+            # for x in self.LIST_OF_RULES:
+            #     r.lpush('list_of_rules', str(x))
+
+            # for x in self.FUTURE_TASKS_AWAITING_COMPLETION:
+            #     r.lpush('future_task_awaiting', str(x))
+            r.set("running_tasks" , self.TASKS_RUNNING)
+            r.set("future_tasks_count", self.FUTURE_TASK_COUNT)
+            # do it every second
+            await trio.sleep(1)
+
+
 
     async def future_task_serializer(self):
         while self.run_vm_thread:
@@ -565,6 +596,10 @@ class VM:
             logger.debug(
                 f"{rule_obj} was added to the list. Since it was not present during the update."
             )
+
+            # Just for the time being
+            self.execute_rule(rule_obj)
+
         logger.debug(
             f"Rule count before addition: {prev_rule_count} and after {len(self.LIST_OF_RULES)}"
         )
