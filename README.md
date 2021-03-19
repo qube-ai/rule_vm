@@ -7,6 +7,11 @@ to execute whatever action has to be executed.
 ## Caution
   - No rule should be named **immediate** in Firestore.
 
+
+## Instructions to setup
+  - Get google service account creds file from GCP.
+  - Name the file firebase_creds.json
+
 ## Goal
 The aim of this system is to provide instructions that are mapped to real world
 as much as possible.
