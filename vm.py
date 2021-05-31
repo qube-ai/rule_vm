@@ -4,9 +4,7 @@ import sys
 import threading
 import time
 import pickle
-import os
-import redis
-import aioredis
+import oss
 
 import trio
 from jsonschema import ValidationError, SchemaError
@@ -92,29 +90,29 @@ class VM:
             nursery.start_soon(self.update_interface)
             logger.info("Started update interface.")
 
-    async def update_interface(self):
-        #     Open redis interface
+    # async def update_interface(self):
+    #     #     Open redis interface
 
-        # redis = await aioredis.create_redis_pool(('localhost', 6379))
-        r = redis.Redis(host='localhost', port=6379, db=0)
-        while self.run_vm_thread:
-            # Your code goes here
+    #     # redis = await aioredis.create_redis_pool(('localhost', 6379))
+    #     r = redis.Redis(host='localhost', port=6379, db=0)
+    #     while self.run_vm_thread:
+    #         # Your code goes here
 
-            tmp_rule_list = list(map(lambda x: str(x), self.LIST_OF_RULES))
-            r.set("list_of_rules", json.dumps(tmp_rule_list))
+    #         tmp_rule_list = list(map(lambda x: str(x), self.LIST_OF_RULES))
+    #         r.set("list_of_rules", json.dumps(tmp_rule_list))
 
-            future_task_awaiting = list(map(lambda x: str(x), self.FUTURE_TASKS_AWAITING_COMPLETION))
-            r.set("future_task_awaiting", json.dumps(future_task_awaiting))
+    #         future_task_awaiting = list(map(lambda x: str(x), self.FUTURE_TASKS_AWAITING_COMPLETION))
+    #         r.set("future_task_awaiting", json.dumps(future_task_awaiting))
 
-            # for x in self.LIST_OF_RULES:
-            #     r.lpush('list_of_rules', str(x))
+    #         # for x in self.LIST_OF_RULES:
+    #         #     r.lpush('list_of_rules', str(x))
 
-            # for x in self.FUTURE_TASKS_AWAITING_COMPLETION:
-            #     r.lpush('future_task_awaiting', str(x))
-            r.set("running_tasks" , self.TASKS_RUNNING)
-            r.set("future_tasks_count", self.FUTURE_TASK_COUNT)
-            # do it every second
-            await trio.sleep(1)
+    #         # for x in self.FUTURE_TASKS_AWAITING_COMPLETION:
+    #         #     r.lpush('future_task_awaiting', str(x))
+    #         r.set("running_tasks" , self.TASKS_RUNNING)
+    #         r.set("future_tasks_count", self.FUTURE_TASK_COUNT)
+    #         # do it every second
+    #         await trio.sleep(1)
 
 
 
@@ -578,6 +576,9 @@ class VM:
             f"Rule count before addition: {prev_rule_count} and after {len(self.LIST_OF_RULES)}"
         )
 
+    def remove_all_future_task_of_this_string(self,str, array):
+        return [i for i in array if i != str]
+
     def update_rule(self, document):
         prev_rule_count = len(self.LIST_OF_RULES)
         rule_obj = self.document_to_rule_obj(document)
@@ -598,6 +599,13 @@ class VM:
             )
 
             # Just for the time being
+            self.execute_rule(rule_obj)
+        
+        if(any(p.id == rule_obj.id for p in self.FUTURE_TASKS_AWAITING_COMPLETION)):
+            logger.info(f"Removing {rule_obj.id} from future awaiting task list.")
+            self.FUTURE_TASKS_AWAITING_COMPLETION = self.remove_all_future_task_of_this_string(rule_obj.id, self.FUTURE_TASKS_AWAITING_COMPLETION)
+
+        # Just for the time being
             self.execute_rule(rule_obj)
 
         logger.debug(
