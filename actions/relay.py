@@ -34,12 +34,16 @@ class ChangeRelayState(BaseAction):
         if(doc):
             doc_id = doc.id
             document = doc.to_dict()
-            finalRelayStatus = document["relayStatus"].copy()
-            finalRelayStatus[self.relay_index] = self.state
+            if(self.device_id.startswith('SW2-')):
+                finalRelayStatus = [document["relay_state"]].copy()
+                finalRelayStatus[self.relay_index] = self.state
+            else:
+                finalRelayStatus = document["relayStatus"].copy()
+                finalRelayStatus[self.relay_index] = self.state
         else:
             logger.error(f"Could not find any device with the given deviceId.")
 
-        final_data = {"relayStatus" : finalRelayStatus}
+        final_data = {"relay_state" : finalRelayStatus[0], "insertedBy" : "dashboard"}
         await store.update_document("devices", self.device_id, final_data)
         def f():
             logger.info(
