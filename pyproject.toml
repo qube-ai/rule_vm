@@ -5,7 +5,7 @@ description = ""
 authors = ["hrithik098 <hrithiky328@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 appdirs = "1.4.4"
 arrow = "0.17.0"
 async_generator = "1.10"

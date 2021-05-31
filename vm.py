@@ -4,7 +4,7 @@ import sys
 import threading
 import time
 import pickle
-import oss
+import os
 
 import trio
 from jsonschema import ValidationError, SchemaError
@@ -90,7 +90,8 @@ class VM:
             nursery.start_soon(self.update_interface)
             logger.info("Started update interface.")
 
-    # async def update_interface(self):
+    async def update_interface(self):
+        logger.info("Stopped redis for production")
     #     #     Open redis interface
 
     #     # redis = await aioredis.create_redis_pool(('localhost', 6379))
