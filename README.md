@@ -1,5 +1,5 @@
 # Virtual Machine
-This virutal machine is intented to execute rules for the Podnet. 
+This virutal machine is intented to execute rules for the Qube. 
 The customer creates rules for the devices to behave in a certain 
 way on the frontend. That rule is taken by the rule VM and executed
 to execute whatever action has to be executed.
